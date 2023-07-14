@@ -44,7 +44,7 @@ Using SECFP (ECFP-style circular substructures as SMILES) doesn't increase the c
 |tox21              |random  |0.712 +/- 0.011|0.305 +/- 0.011|0.718 +/- 0.011|0.31 +/- 0.011 |
 |sider              |random  |0.604 +/- 0.022|0.62 +/- 0.022 |0.614 +/- 0.022|0.624 +/- 0.022|
 
-Implementing a GZip-based regressor (kNN, k=10) shows performance comparable to baseline performance implementations from MoleculeNet (https://moleculenet.org/full-results).
+Implementing a GZip-based regressor (kNN, k=10) shows performance comparable to baseline performance of common ML implementations from MoleculeNet (https://moleculenet.org/full-results).
 
 |Data Set|Split |AUROC/RMSE (Valid)|F1/MAE (Valid) |AUROC/RMSE (Test)|F1/MAE (Test) |
 |--------|------|------------------|---------------|-----------------|--------------|
