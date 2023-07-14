@@ -22,11 +22,11 @@ def classify_(x1, X_train, y_train, k, class_weights=None):
     top_k_class = y_train[sorted_idx[:k]]
 
     task_preds = []
-    for task_top_k_class in np.array(top_k_class).T:
+    for i, task_top_k_class in enumerate(np.array(top_k_class).T):
         counts = dict(Counter([int(e) for e in task_top_k_class]))
 
-        if isinstance(class_weights, Iterable):
-            for k, v in enumerate(class_weights):
+        if isinstance(class_weights, Iterable) and len(class_weights) - 1 >= i:
+            for k, v in enumerate(class_weights[i]):
                 if k in counts:
                     counts[k] *= v
 

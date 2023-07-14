@@ -24,6 +24,16 @@ The current results are presented in the table below. Data sets with random spli
 |tox21              |random  |0.6 +/- 0.007  |0.308 +/- 0.007|0.599 +/- 0.007|0.303 +/- 0.007|
 |sider              |random  |0.56 +/- 0.007 |0.788 +/- 0.007|0.563 +/- 0.007|0.778 +/- 0.007|
 
+Implementing a weighted version of the kNN algorithm does not necessary lead to better classification performance on unbalanced data sets.
+
+|     Data Set      | Split  | AUROC (Valid) |  F1 (Valid)   | AUROC (Test)  |   F1 (Test)   |
+|-------------------|--------|---------------|---------------|---------------|---------------|
+|bbbp               |scaffold|0.917 +/- 0.0  |0.917 +/- 0.0  |0.632 +/- 0.0  |0.623 +/- 0.0  |
+|bace_classification|random  |0.784 +/- 0.02 |0.783 +/- 0.02 |0.772 +/- 0.02 |0.771 +/- 0.02 |
+|clintox            |random  |0.944 +/- 0.02 |0.91 +/- 0.02  |0.884 +/- 0.02 |0.905 +/- 0.02 |
+|tox21              |random  |0.69 +/- 0.013 |0.285 +/- 0.013|0.697 +/- 0.013|0.295 +/- 0.013|
+|sider              |random  |0.592 +/- 0.011|0.649 +/- 0.011|0.609 +/- 0.011|0.659 +/- 0.011|
+
 ## Discussion
 TBD
 

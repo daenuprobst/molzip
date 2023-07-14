@@ -50,21 +50,25 @@ def write_table(results: List) -> None:
         writer.write_table()
 
 
-def sub_sample(data: np.array, p: float = 0.5, seed=666) -> np.array:
-    data_out, _ = train_test_split(
-        data,
-        train_size=int(p * len(data)),
-        stratify=[y for x, y in data],
+def sub_sample(
+    X: np.array, Y: np.array, p: float = 0.5, seed=666
+) -> Tuple[np.array, np.array]:
+    X_sample, _, y_sample, _ = train_test_split(
+        X,
+        Y,
+        train_size=int(p * len(X)),
+        stratify=Y,
         random_state=seed,
     )
 
-    return data_out
+    return X_sample, y_sample
 
 
-def augment(data: np.array, n: int = 5) -> np.array:
-    augmented_data = []
+def augment(X: np.array, Y: np.array, n: int = 5) -> Tuple[np.array, np.array]:
+    X_aug = []
+    y_aug = []
 
-    for x, y in data:
+    for x, y in zip(X, Y):
         mol = MolFromSmiles(x)
         for _ in range(n):
             x_rand = MolToSmiles(
@@ -76,9 +80,10 @@ def augment(data: np.array, n: int = 5) -> np.array:
                 allHsExplicit=True,
             )
 
-            augmented_data.append((x_rand, y))
+            X_aug.append(x_rand)
+            y_aug.append(y)
 
-    return np.array(augmented_data)
+    return np.array(X_aug), np.array(y_aug)
 
 
 def preprocess(smiles: str, preproc: bool = False) -> str:
@@ -131,18 +136,20 @@ def benchmark(configs: List[Dict[str, Any]]) -> None:
             )
 
             if config["augment"] > 0:
-                train_set = augment(train_set, config["augment"])
+                X_train, y_train = augment(X_train, y_train, config["augment"])
 
             if config["sub_sample"] > 0.0:
-                train_set = sub_sample(train_set, config["sub_sample"])
+                X_train, y_train = sub_sample(X_train, y_train, config["sub_sample"])
 
             # Get class weights
-            class_weights = None
+            class_weights = []
             if config["is_imbalanced"]:
-                y_train = [int(y) for _, y in train_set]
-                class_weights = compute_class_weight(
-                    "balanced", classes=sorted(list(set(y_train))), y=y_train
-                )
+                for y_task in y_train.T:
+                    class_weights.append(
+                        compute_class_weight(
+                            "balanced", classes=sorted(list(set(y_task))), y=y_task
+                        )
+                    )
 
             # Run classification
             valid_preds = classify(
@@ -200,8 +207,8 @@ def main():
                 "k": 5,
                 "augment": 0,
                 "preprocess": False,
-                "sub_sample": 0.0,
-                "is_imbalanced": False,
+                "sub_sample": 0.5,
+                "is_imbalanced": True,
                 "n": 1,
             },
             {
@@ -211,7 +218,7 @@ def main():
                 "augment": 0,
                 "preprocess": False,
                 "sub_sample": 0.0,
-                "is_imbalanced": False,
+                "is_imbalanced": True,
                 "n": 4,
             },
             {
@@ -221,7 +228,7 @@ def main():
                 "augment": 0,
                 "preprocess": False,
                 "sub_sample": 0.0,
-                "is_imbalanced": False,
+                "is_imbalanced": True,
                 "n": 4,
             },
             {
@@ -231,7 +238,7 @@ def main():
                 "augment": 0,
                 "preprocess": False,
                 "sub_sample": 0.0,
-                "is_imbalanced": False,
+                "is_imbalanced": True,
                 "n": 4,
             },
             {
@@ -241,7 +248,7 @@ def main():
                 "augment": 0,
                 "preprocess": False,
                 "sub_sample": 0.0,
-                "is_imbalanced": False,
+                "is_imbalanced": True,
                 "n": 4,
             },
         ]
