@@ -1,3 +1,5 @@
+[![DOI](https://zenodo.org/badge/666335439.svg)](https://zenodo.org/badge/latestdoi/666335439)
+
 # Parameter-Free Molecular Classification with Gzip
 ### Daniel Probst<sup>1</sup>, You?
 <sup>1</sup>Institute of Electrical and Micro Engineering, LTS2, EPFL
