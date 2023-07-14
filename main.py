@@ -120,64 +120,70 @@ def benchmark(configs: List[Dict[str, Any]]) -> None:
 
     for config in configs:
         # Load data sets
-        tasks, X_train, y_train, X_valid, y_valid, X_test, y_test = molnet_loader(
-            config["dataset"],
-            splitter=config["splitter"],
-            preproc=config["preprocess"],
-            reload=False,
-        )
 
-        if config["augment"] > 0:
-            train_set = augment(train_set, config["augment"])
-
-        if config["sub_sample"] > 0.0:
-            train_set = sub_sample(train_set, config["sub_sample"])
-
-        # Get class weights
-        class_weights = None
-        if config["is_imbalanced"]:
-            y_train = [int(y) for _, y in train_set]
-            class_weights = compute_class_weight(
-                "balanced", classes=sorted(list(set(y_train))), y=y_train
+        run_results = []
+        for _ in range(config["n"]):
+            tasks, X_train, y_train, X_valid, y_valid, X_test, y_test = molnet_loader(
+                config["dataset"],
+                splitter=config["splitter"],
+                preproc=config["preprocess"],
+                reload=False,
             )
 
-        # Run classification
-        valid_preds = classify(X_train, y_train, X_valid, config["k"], class_weights)
-        test_preds = classify(X_train, y_train, X_test, config["k"], class_weights)
-        # Compute metrics
-        valid_auroc = roc_auc_score(y_valid, valid_preds)
-        valid_f1 = f1_score(
-            y_valid,
-            valid_preds,
-            average="micro",
-        )
-        test_auroc = roc_auc_score(y_test, test_preds)
-        test_f1 = f1_score(
-            y_test,
-            test_preds,
-            average="micro",
-        )
+            if config["augment"] > 0:
+                train_set = augment(train_set, config["augment"])
 
-        print(f"\n{config['dataset']} ({len(tasks)} tasks)")
-        print(config)
-        print(
-            f"Valid AUROC: {valid_auroc}, Valid F1: {valid_f1} , Test AUROC: {test_auroc}, Test F1: {test_f1}"
-        )
+            if config["sub_sample"] > 0.0:
+                train_set = sub_sample(train_set, config["sub_sample"])
+
+            # Get class weights
+            class_weights = None
+            if config["is_imbalanced"]:
+                y_train = [int(y) for _, y in train_set]
+                class_weights = compute_class_weight(
+                    "balanced", classes=sorted(list(set(y_train))), y=y_train
+                )
+
+            # Run classification
+            valid_preds = classify(
+                X_train, y_train, X_valid, config["k"], class_weights
+            )
+            test_preds = classify(X_train, y_train, X_test, config["k"], class_weights)
+
+            # Compute metrics
+            valid_auroc = roc_auc_score(y_valid, valid_preds)
+            valid_f1 = f1_score(
+                y_valid,
+                valid_preds,
+                average="micro",
+            )
+            test_auroc = roc_auc_score(y_test, test_preds)
+            test_f1 = f1_score(
+                y_test,
+                test_preds,
+                average="micro",
+            )
+
+            print(f"\n{config['dataset']} ({len(tasks)} tasks)")
+            print(config)
+            print(
+                f"Valid AUROC: {valid_auroc}, Valid F1: {valid_f1} , Test AUROC: {test_auroc}, Test F1: {test_f1}"
+            )
+
+            run_results.append([valid_auroc, valid_f1, test_auroc, test_f1])
+
+        run_results = np.array(run_results)
+        results_means = np.mean(run_results, axis=0)
+        results_stds = np.std(run_results, axis=0)
 
         results.append(
             (
                 config,
-                # {
-                #     "valid_auroc": f"{round(task_means[0], 3)} +/- {round(task_stds[0], 3)}",
-                #     "valid_f1": f"{round(task_means[1], 3)} +/- {round(task_stds[0], 3)}",
-                #     "test_auroc": f"{round(task_means[2], 3)} +/- {round(task_stds[0], 3)}",
-                #     "test_f1": f"{round(task_means[3], 3)} +/- {round(task_stds[0], 3)}",
-                # },
                 {
-                    "valid_auroc": f"{round(valid_auroc, 3)}",
-                    "valid_f1": f"{round(valid_f1, 3)}",
-                    "test_auroc": f"{round(test_auroc, 3)}",
-                    "test_f1": f"{round(test_f1, 3)}",
+                    "valid_auroc": f"{round(results_means[0], 3)} +/- {round(results_stds[0], 3)}",
+                    "valid_f1": f"{round(results_means[1], 3)} +/- {round(results_stds[0], 3)}",
+                    "test_auroc": f"{round(results_means[2], 3)} +/- {round(results_stds[0], 3)}",
+                    "test_f1": f"{round(results_means[3], 3)} +/- {round(results_stds[0], 3)}",
                 },
             )
         )
@@ -196,6 +202,7 @@ def main():
                 "preprocess": False,
                 "sub_sample": 0.0,
                 "is_imbalanced": False,
+                "n": 1,
             },
             {
                 "dataset": "bace_classification",
@@ -205,6 +212,7 @@ def main():
                 "preprocess": False,
                 "sub_sample": 0.0,
                 "is_imbalanced": False,
+                "n": 4,
             },
             {
                 "dataset": "clintox",
@@ -214,6 +222,7 @@ def main():
                 "preprocess": False,
                 "sub_sample": 0.0,
                 "is_imbalanced": False,
+                "n": 4,
             },
             {
                 "dataset": "tox21",
@@ -223,6 +232,7 @@ def main():
                 "preprocess": False,
                 "sub_sample": 0.0,
                 "is_imbalanced": False,
+                "n": 4,
             },
             {
                 "dataset": "sider",
@@ -232,6 +242,7 @@ def main():
                 "preprocess": False,
                 "sub_sample": 0.0,
                 "is_imbalanced": False,
+                "n": 4,
             },
         ]
     )

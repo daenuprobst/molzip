@@ -12,7 +12,15 @@ The classification of a molecule on a wide variety of physicochemical and pharma
 The Gzip-based classifier introduced in this article has been adapted from the implementation presented by Jiang et al. and differs in three points: (1) as, as the authors have noted, the Gzip-based classification method has a relatively high time complexity, multiprocessing has been added; (2) multi-task classification has been added; and (3) a class weighing scheme has been implemented to account for unbalanced data. Furthermore, the capability to preprocess data, in this case the SMILES strings, has been added to the calling program.
 
 ## Results
-The current results are presented in the table below.
+The current results are presented in the table below. Data sets with random splits were ran a total of four times.
+
+|     Data Set      | Split  | AUROC (Valid) |  F1 (Valid)   | AUROC (Test)  |   F1 (Test)   |
+|-------------------|--------|---------------|---------------|---------------|---------------|
+|bbbp               |scaffold|0.891 +/- 0.0  |0.902 +/- 0.0  |0.679 +/- 0.0  |0.686 +/- 0.0  |
+|bace_classification|random  |0.793 +/- 0.038|0.793 +/- 0.038|0.789 +/- 0.038|0.789 +/- 0.038|
+|clintox            |random  |0.805 +/- 0.038|0.965 +/- 0.038|0.77 +/- 0.038 |0.958 +/- 0.038|
+|tox21              |random  |0.6 +/- 0.007  |0.308 +/- 0.007|0.599 +/- 0.007|0.303 +/- 0.007|
+|sider              |random  |0.56 +/- 0.007 |0.788 +/- 0.007|0.563 +/- 0.007|0.778 +/- 0.007|
 
 ## Discussion
 TBD
