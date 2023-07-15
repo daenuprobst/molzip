@@ -1,8 +1,17 @@
 from typing import List, Dict, Any, Tuple
 import numpy as np
 import deepchem.molnet as mn
+import selfies as sf
+import deepsmiles as ds
 
-from sklearn.metrics import f1_score, roc_auc_score
+from mhfp.encoder import MHFPEncoder
+
+from sklearn.metrics import (
+    f1_score,
+    roc_auc_score,
+    mean_squared_error,
+    mean_absolute_error,
+)
 from sklearn.utils.class_weight import compute_class_weight
 from sklearn.model_selection import train_test_split
 
@@ -14,7 +23,25 @@ from rdkit import rdBase
 blocker = rdBase.BlockLogs()
 
 from gzip_classifier import classify
+from gzip_regressor import regress
 from smiles_tokenizer import tokenize
+
+
+def to_secfp(
+    smiles: str,
+    radius: int = 3,
+    rings: bool = True,
+    kekulize: bool = True,
+    min_radius: int = 1,
+) -> str:
+    return " ".join(
+        [
+            str(s)
+            for s in MHFPEncoder.shingling_from_mol(
+                MolFromSmiles(smiles), radius, rings, kekulize, min_radius
+            )
+        ]
+    )
 
 
 def write_table(results: List) -> None:
@@ -37,10 +64,10 @@ def write_table(results: List) -> None:
         headers=[
             "Data Set",
             "Split",
-            "AUROC (Valid)",
-            "F1 (Valid)",
-            "AUROC (Test)",
-            "F1 (Test)",
+            "AUROC/RMSE (Valid)",
+            "F1/MAE (Valid)",
+            "AUROC/RMSE (Test)",
+            "F1/MAE (Test)",
         ],
         value_matrix=values,
     )
@@ -50,21 +77,25 @@ def write_table(results: List) -> None:
         writer.write_table()
 
 
-def sub_sample(data: np.array, p: float = 0.5, seed=666) -> np.array:
-    data_out, _ = train_test_split(
-        data,
-        train_size=int(p * len(data)),
-        stratify=[y for x, y in data],
+def sub_sample(
+    X: np.array, Y: np.array, p: float = 0.5, seed=666
+) -> Tuple[np.array, np.array]:
+    X_sample, _, y_sample, _ = train_test_split(
+        X,
+        Y,
+        train_size=int(p * len(X)),
+        stratify=Y,
         random_state=seed,
     )
 
-    return data_out
+    return X_sample, y_sample
 
 
-def augment(data: np.array, n: int = 5) -> np.array:
-    augmented_data = []
+def augment(X: np.array, Y: np.array, n: int = 5) -> Tuple[np.array, np.array]:
+    X_aug = []
+    y_aug = []
 
-    for x, y in data:
+    for x, y in zip(X, Y):
         mol = MolFromSmiles(x)
         for _ in range(n):
             x_rand = MolToSmiles(
@@ -76,14 +107,18 @@ def augment(data: np.array, n: int = 5) -> np.array:
                 allHsExplicit=True,
             )
 
-            augmented_data.append((x_rand, y))
+            X_aug.append(x_rand)
+            y_aug.append(y)
 
-    return np.array(augmented_data)
+    return np.array(X_aug), np.array(y_aug)
 
 
 def preprocess(smiles: str, preproc: bool = False) -> str:
     if not preproc:
         return smiles
+        return to_secfp(smiles, min_radius=0)
+        return sf.encoder(smiles, strict=False)
+        return ds.Converter(rings=True, branches=True).encode(smiles)
 
     smiles = MolToSmiles(
         MolFromSmiles(smiles),
@@ -91,6 +126,7 @@ def preprocess(smiles: str, preproc: bool = False) -> str:
         allBondsExplicit=True,
         allHsExplicit=True,
     )
+
     return " ".join(tokenize(smiles))
 
 
@@ -128,49 +164,78 @@ def benchmark(configs: List[Dict[str, Any]]) -> None:
                 splitter=config["splitter"],
                 preproc=config["preprocess"],
                 reload=False,
+                transformers=[],
             )
 
             if config["augment"] > 0:
-                train_set = augment(train_set, config["augment"])
+                X_train, y_train = augment(X_train, y_train, config["augment"])
 
             if config["sub_sample"] > 0.0:
-                train_set = sub_sample(train_set, config["sub_sample"])
+                X_train, y_train = sub_sample(X_train, y_train, config["sub_sample"])
 
-            # Get class weights
-            class_weights = None
-            if config["is_imbalanced"]:
-                y_train = [int(y) for _, y in train_set]
-                class_weights = compute_class_weight(
-                    "balanced", classes=sorted(list(set(y_train))), y=y_train
+            if config["task"] == "classification":
+                # Get class weights
+                class_weights = []
+                if config["is_imbalanced"]:
+                    for y_task in y_train.T:
+                        class_weights.append(
+                            compute_class_weight(
+                                "balanced", classes=sorted(list(set(y_task))), y=y_task
+                            )
+                        )
+
+                # Run classification
+                valid_preds = classify(
+                    X_train, y_train, X_valid, config["k"], class_weights
+                )
+                test_preds = classify(
+                    X_train, y_train, X_test, config["k"], class_weights
                 )
 
-            # Run classification
-            valid_preds = classify(
-                X_train, y_train, X_valid, config["k"], class_weights
-            )
-            test_preds = classify(X_train, y_train, X_test, config["k"], class_weights)
+                # Compute metrics
+                valid_auroc = roc_auc_score(y_valid, valid_preds)
+                valid_f1 = f1_score(
+                    y_valid,
+                    valid_preds,
+                    average="micro",
+                )
+                test_auroc = roc_auc_score(y_test, test_preds)
+                test_f1 = f1_score(
+                    y_test,
+                    test_preds,
+                    average="micro",
+                )
 
-            # Compute metrics
-            valid_auroc = roc_auc_score(y_valid, valid_preds)
-            valid_f1 = f1_score(
-                y_valid,
-                valid_preds,
-                average="micro",
-            )
-            test_auroc = roc_auc_score(y_test, test_preds)
-            test_f1 = f1_score(
-                y_test,
-                test_preds,
-                average="micro",
-            )
+                print(f"\n{config['dataset']} ({len(tasks)} tasks)")
+                print(config)
+                print(
+                    f"Valid AUROC: {valid_auroc}, Valid F1: {valid_f1} , Test AUROC: {test_auroc}, Test F1: {test_f1}"
+                )
 
-            print(f"\n{config['dataset']} ({len(tasks)} tasks)")
-            print(config)
-            print(
-                f"Valid AUROC: {valid_auroc}, Valid F1: {valid_f1} , Test AUROC: {test_auroc}, Test F1: {test_f1}"
-            )
+                run_results.append([valid_auroc, valid_f1, test_auroc, test_f1])
+            else:
+                valid_preds = regress(X_train, y_train, X_valid, config["k"])
+                test_preds = regress(X_train, y_train, X_test, config["k"])
 
-            run_results.append([valid_auroc, valid_f1, test_auroc, test_f1])
+                # Compute metrics
+                valid_rmse = mean_squared_error(y_valid, valid_preds, squared=False)
+                valid_mae = mean_absolute_error(
+                    y_valid,
+                    valid_preds,
+                )
+                test_rmse = mean_squared_error(y_test, test_preds, squared=False)
+                test_mae = mean_absolute_error(
+                    y_test,
+                    test_preds,
+                )
+
+                print(f"\n{config['dataset']} ({len(tasks)} tasks)")
+                print(config)
+                print(
+                    f"Valid RMSE: {valid_rmse}, Valid MAE: {valid_mae} , Test RMSE: {test_rmse}, Test MAE: {test_mae}"
+                )
+
+                run_results.append([valid_rmse, valid_mae, test_rmse, test_mae])
 
         run_results = np.array(run_results)
         results_means = np.mean(run_results, axis=0)
@@ -195,55 +260,93 @@ def main():
     benchmark(
         [
             {
-                "dataset": "bbbp",
-                "splitter": "scaffold",
-                "k": 5,
-                "augment": 0,
-                "preprocess": False,
-                "sub_sample": 0.0,
-                "is_imbalanced": False,
-                "n": 1,
-            },
-            {
-                "dataset": "bace_classification",
+                "dataset": "freesolv",
                 "splitter": "random",
-                "k": 5,
+                "task": "regression",
+                "k": 10,
                 "augment": 0,
-                "preprocess": False,
+                "preprocess": True,
                 "sub_sample": 0.0,
-                "is_imbalanced": False,
+                "is_imbalanced": True,
                 "n": 4,
             },
             {
-                "dataset": "clintox",
+                "dataset": "delaney",
                 "splitter": "random",
-                "k": 5,
+                "task": "regression",
+                "k": 10,
                 "augment": 0,
-                "preprocess": False,
+                "preprocess": True,
                 "sub_sample": 0.0,
-                "is_imbalanced": False,
+                "is_imbalanced": True,
                 "n": 4,
             },
             {
-                "dataset": "tox21",
+                "dataset": "lipo",
                 "splitter": "random",
-                "k": 5,
+                "task": "regression",
+                "k": 10,
                 "augment": 0,
-                "preprocess": False,
+                "preprocess": True,
                 "sub_sample": 0.0,
-                "is_imbalanced": False,
+                "is_imbalanced": True,
                 "n": 4,
             },
-            {
-                "dataset": "sider",
-                "splitter": "random",
-                "k": 5,
-                "augment": 0,
-                "preprocess": False,
-                "sub_sample": 0.0,
-                "is_imbalanced": False,
-                "n": 4,
-            },
+            # {
+            #     "dataset": "sider",
+            #     "splitter": "random",
+            #     "task": "classification",
+            #     "k": 5,
+            #     "augment": 0,
+            #     "preprocess": False,
+            #     "sub_sample": 0.0,
+            #     "is_imbalanced": True,
+            #     "n": 4,
+            # },
+            # {
+            #     "dataset": "bbbp",
+            #     "splitter": "scaffold",
+            #     "task": "classification",
+            #     "k": 5,
+            #     "augment": 0,
+            #     "preprocess": False,
+            #     "sub_sample": 0.0,
+            #     "is_imbalanced": True,
+            #     "n": 1,
+            # },
+            # {
+            #     "dataset": "bace_classification",
+            #     "splitter": "random",
+            #     "task": "classification",
+            #     "k": 5,
+            #     "augment": 0,
+            #     "preprocess": False,
+            #     "sub_sample": 0.0,
+            #     "is_imbalanced": True,
+            #     "n": 4,
+            # },
+            # {
+            #     "dataset": "clintox",
+            #     "splitter": "random",
+            #     "task": "classification",
+            #     "k": 5,
+            #     "augment": 0,
+            #     "preprocess": False,
+            #     "sub_sample": 0.0,
+            #     "is_imbalanced": True,
+            #     "n": 4,
+            # },
+            # {
+            #     "dataset": "tox21",
+            #     "splitter": "random",
+            #     "task": "classification",
+            #     "k": 5,
+            #     "augment": 0,
+            #     "preprocess": False,
+            #     "sub_sample": 0.0,
+            #     "is_imbalanced": True,
+            #     "n": 4,
+            # },
         ]
     )
 

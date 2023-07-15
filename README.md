@@ -1,6 +1,6 @@
 [![DOI](https://zenodo.org/badge/666335439.svg)](https://zenodo.org/badge/latestdoi/666335439)
 
-# Parameter-Free Molecular Classification with Gzip
+# Parameter-Free Molecular Classification and Regression with Gzip
 ### Daniel Probst<sup>1</sup>, You?
 <sup>1</sup>Institute of Electrical and Micro Engineering, LTS2, EPFL
 
@@ -23,6 +23,34 @@ The current results are presented in the table below. Data sets with random spli
 |clintox            |random  |0.805 +/- 0.038|0.965 +/- 0.038|0.77 +/- 0.038 |0.958 +/- 0.038|
 |tox21              |random  |0.6 +/- 0.007  |0.308 +/- 0.007|0.599 +/- 0.007|0.303 +/- 0.007|
 |sider              |random  |0.56 +/- 0.007 |0.788 +/- 0.007|0.563 +/- 0.007|0.778 +/- 0.007|
+
+Implementing a weighted version of the kNN algorithm does not necessary lead to better classification performance on unbalanced data sets.
+
+|     Data Set      | Split  | AUROC (Valid) |  F1 (Valid)   | AUROC (Test)  |   F1 (Test)   |
+|-------------------|--------|---------------|---------------|---------------|---------------|
+|bbbp               |scaffold|0.917 +/- 0.0  |0.917 +/- 0.0  |0.632 +/- 0.0  |0.623 +/- 0.0  |
+|bace_classification|random  |0.784 +/- 0.02 |0.783 +/- 0.02 |0.772 +/- 0.02 |0.771 +/- 0.02 |
+|clintox            |random  |0.944 +/- 0.02 |0.91 +/- 0.02  |0.884 +/- 0.02 |0.905 +/- 0.02 |
+|tox21              |random  |0.69 +/- 0.013 |0.285 +/- 0.013|0.697 +/- 0.013|0.295 +/- 0.013|
+|sider              |random  |0.592 +/- 0.011|0.649 +/- 0.011|0.609 +/- 0.011|0.659 +/- 0.011|
+
+Using SECFP (ECFP-style circular substructures as SMILES) doesn't increase the classification performance of the weighted kNN.
+
+|     Data Set      | Split  | AUROC (Valid) |  F1 (Valid)   | AUROC (Test)  |   F1 (Test)   |
+|-------------------|--------|---------------|---------------|---------------|---------------|
+|bbbp               |scaffold|0.83 +/- 0.0   |0.819 +/- 0.0  |0.632 +/- 0.0  |0.627 +/- 0.0  |
+|bace_classification|random  |0.833 +/- 0.015|0.829 +/- 0.015|0.826 +/- 0.015|0.821 +/- 0.015|
+|clintox            |random  |0.74 +/- 0.076 |0.831 +/- 0.076|0.747 +/- 0.076|0.84 +/- 0.076 |
+|tox21              |random  |0.712 +/- 0.011|0.305 +/- 0.011|0.718 +/- 0.011|0.31 +/- 0.011 |
+|sider              |random  |0.604 +/- 0.022|0.62 +/- 0.022 |0.614 +/- 0.022|0.624 +/- 0.022|
+
+Implementing a GZip-based regressor (kNN, k=10) shows performance comparable to baseline performance of common ML implementations from MoleculeNet (https://moleculenet.org/full-results).
+
+|Data Set|Split |AUROC/RMSE (Valid)|F1/MAE (Valid) |AUROC/RMSE (Test)|F1/MAE (Test) |
+|--------|------|------------------|---------------|-----------------|--------------|
+|freesolv|random|0.567 +/- 0.155   |0.302 +/- 0.155|0.465 +/- 0.155  |0.31 +/- 0.155|
+|delaney |random|1.362 +/- 0.14    |1.05 +/- 0.14  |1.371 +/- 0.14   |1.005 +/- 0.14|
+|lipo    |random|0.93 +/- 0.013    |0.724 +/- 0.013|0.939 +/- 0.013  |0.73 +/- 0.013|
 
 ## Discussion
 TBD
