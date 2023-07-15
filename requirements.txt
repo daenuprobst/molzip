@@ -1,6 +1,6 @@
 pytablewriter==1.0.0
 deepchem[torch]==2.7.1
-numpy==1.21
+numpy==1.22.3
 selfies==2.1.1
 deepsmiles==1.0.1
 mhfp==1.9.6
