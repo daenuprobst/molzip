@@ -33,6 +33,7 @@ Implementing a weighted version of the kNN algorithm does not necessary lead to 
 |clintox            |random  |0.944 +/- 0.02 |0.91 +/- 0.02  |0.884 +/- 0.02 |0.905 +/- 0.02 |
 |tox21              |random  |0.69 +/- 0.013 |0.285 +/- 0.013|0.697 +/- 0.013|0.295 +/- 0.013|
 |sider              |random  |0.592 +/- 0.011|0.649 +/- 0.011|0.609 +/- 0.011|0.659 +/- 0.011|
+|hiv                |random  |0.756 +/- 0.015|0.897 +/- 0.005|0.77 +/- 0.01  |0.9   +/- 0.001|
 
 Using SECFP (ECFP-style circular substructures as SMILES) doesn't increase the classification performance of the weighted kNN.
 
