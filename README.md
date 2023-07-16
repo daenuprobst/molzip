@@ -53,6 +53,13 @@ Implementing a GZip-based regressor (kNN, k=10) shows performance comparable to 
 |delaney |random|1.362 +/- 0.14    |1.05 +/- 0.14  |1.371 +/- 0.14   |1.005 +/- 0.14|
 |lipo    |random|0.93 +/- 0.013    |0.724 +/- 0.013|0.939 +/- 0.013  |0.73 +/- 0.013|
 
+The classifier is also able to classify raw reaction SMILES from the Schneider50k data set (no class weighting).
+
+|Data Set |Split |AUROC/RMSE (Valid)|F1/MAE (Valid)|AUROC/RMSE (Test)|F1/MAE (Test)|
+|---------|------|------------------|--------------|-----------------|-------------|
+|schneider|random|0.0 +/- 0.0       |0.801 +/- 0.0 |0.0 +/- 0.0      |0.801 +/- 0.0|
+
+
 ## Discussion
 TBD
 
