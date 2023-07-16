@@ -21,11 +21,12 @@ def regress_(x1, X_train, y_train, k):
     distance_from_x1 = np.array(distance_from_x1)
     sorted_idx = np.argsort(distance_from_x1)
     top_k_values = y_train[sorted_idx[:k]]
-    # top_k_dists = distance_from_x1[sorted_idx[:k]]
+    top_k_dists = distance_from_x1[sorted_idx[:k]]
 
     task_preds = []
-    for i, task_top_k_values in enumerate(np.array(top_k_values).T):
-        task_preds.append(np.mean(task_top_k_values))
+    for vals, dists in zip(np.array(top_k_values).T, np.array(top_k_dists).T):
+        dists = 1 - dists
+        task_preds.append(np.mean(vals * dists) / np.sum(dists))
 
     return task_preds
 

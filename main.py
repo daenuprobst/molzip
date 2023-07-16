@@ -28,6 +28,8 @@ from gzip_classifier import classify
 from gzip_regressor import regress
 from smiles_tokenizer import tokenize
 
+enc = MHFPEncoder()
+
 
 def to_secfp(
     smiles: str,
@@ -117,10 +119,10 @@ def augment(X: np.array, Y: np.array, n: int = 5) -> Tuple[np.array, np.array]:
 
 def preprocess(smiles: str, preproc: bool = False) -> str:
     if not preproc:
-        # return smiles
-        return to_secfp(smiles, min_radius=0)
-        return sf.encoder(smiles, strict=False)
-        return ds.Converter(rings=True, branches=True).encode(smiles)
+        return smiles
+        # return to_secfp(smiles, min_radius=0)
+        # return sf.encoder(smiles, strict=False)
+        # return ds.Converter(rings=True, branches=True).encode(smiles)
 
     smiles = MolToSmiles(
         MolFromSmiles(smiles),
@@ -301,39 +303,39 @@ def benchmark(configs: List[Dict[str, Any]]) -> None:
 def main():
     benchmark(
         [
-            # {
-            #     "dataset": "freesolv",
-            #     "splitter": "random",
-            #     "task": "regression",
-            #     "k": 10,
-            #     "augment": 0,
-            #     "preprocess": True,
-            #     "sub_sample": 0.0,
-            #     "is_imbalanced": True,
-            #     "n": 4,
-            # },
-            # {
-            #     "dataset": "delaney",
-            #     "splitter": "random",
-            #     "task": "regression",
-            #     "k": 10,
-            #     "augment": 0,
-            #     "preprocess": True,
-            #     "sub_sample": 0.0,
-            #     "is_imbalanced": True,
-            #     "n": 4,
-            # },
-            # {
-            #     "dataset": "lipo",
-            #     "splitter": "random",
-            #     "task": "regression",
-            #     "k": 10,
-            #     "augment": 0,
-            #     "preprocess": True,
-            #     "sub_sample": 0.0,
-            #     "is_imbalanced": True,
-            #     "n": 4,
-            # },
+            {
+                "dataset": "freesolv",
+                "splitter": "random",
+                "task": "regression",
+                "k": 10,
+                "augment": 0,
+                "preprocess": False,
+                "sub_sample": 0.0,
+                "is_imbalanced": True,
+                "n": 4,
+            },
+            {
+                "dataset": "delaney",
+                "splitter": "random",
+                "task": "regression",
+                "k": 10,
+                "augment": 0,
+                "preprocess": False,
+                "sub_sample": 0.0,
+                "is_imbalanced": True,
+                "n": 4,
+            },
+            {
+                "dataset": "lipo",
+                "splitter": "random",
+                "task": "regression",
+                "k": 10,
+                "augment": 0,
+                "preprocess": False,
+                "sub_sample": 0.0,
+                "is_imbalanced": True,
+                "n": 4,
+            },
             # {
             #     "dataset": "hiv",
             #     "splitter": "random",
@@ -411,17 +413,17 @@ def main():
             #     "is_imbalanced": True,
             #     "n": 4,
             # },
-            {
-                "dataset": "schneider",
-                "splitter": "random",
-                "task": "classification",
-                "k": 5,
-                "augment": 0,
-                "preprocess": False,
-                "sub_sample": 0.0,
-                "is_imbalanced": False,
-                "n": 1,
-            },
+            # {
+            #     "dataset": "schneider",
+            #     "splitter": "random",
+            #     "task": "classification",
+            #     "k": 5,
+            #     "augment": 0,
+            #     "preprocess": False,
+            #     "sub_sample": 0.0,
+            #     "is_imbalanced": False,
+            #     "n": 1,
+            # },
         ]
     )
 
