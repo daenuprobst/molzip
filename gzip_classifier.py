@@ -38,8 +38,6 @@ def classify_(x1, X_train, y_train, k, class_weights=None):
 
 
 def classify(X_train, y_train, X_test, k, class_weights):
-    preds = []
-
     cpu_count = multiprocessing.cpu_count()
 
     with multiprocessing.Pool(cpu_count) as p:
