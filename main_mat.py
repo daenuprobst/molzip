@@ -2,11 +2,11 @@ from typing import List, Dict, Any, Tuple
 from pathlib import Path
 import numpy as np
 import pandas as pd
-import deepchem.molnet as mn
-import selfies as sf
-import deepsmiles as ds
+# import deepchem.molnet as mn
+# import selfies as sf
+# import deepsmiles as ds
 
-from mhfp.encoder import MHFPEncoder
+# from mhfp.encoder import MHFPEncoder
 
 from sklearn.metrics import (
     f1_score,
@@ -20,8 +20,8 @@ from sklearn.model_selection import train_test_split
 
 from pytablewriter import MarkdownTableWriter
 
-from rdkit.Chem.AllChem import MolFromSmiles, MolToSmiles, MolToInchi
-from rdkit import rdBase
+# from rdkit.Chem.AllChem import MolFromSmiles, MolToSmiles, MolToInchi
+# from rdkit import rdBase
 
 blocker = rdBase.BlockLogs()
 
@@ -29,7 +29,8 @@ from gzip_classifier import classify
 from gzip_regressor import regress
 from smiles_tokenizer import tokenize
 
-enc = MHFPEncoder()
+def MatFeat(Formula: str) -> np.array:
+    return None
 
 
 def to_secfp(
@@ -114,17 +115,14 @@ def augment(X: np.array, Y: np.array, n: int = 5) -> Tuple[np.array, np.array]:
 
             X_aug.append(x_rand)
             y_aug.append(y)
-    print(f"Augmented {(X_aug)} samples")
-    print(f"Augmented {(y_aug)} samples")
+
     return np.array(X_aug), np.array(y_aug)
 
 
 def preprocess(smiles: str, preproc: bool = False) -> str:
-    print("preproc", preproc)
-    print("smiles", to_secfp(smiles, min_radius=0))
     if not preproc:
-        #return smiles
-        return to_secfp(smiles, min_radius=0)
+        return smiles
+        # return to_secfp(smiles, min_radius=0)
         # return sf.encoder(smiles, strict=False)
         # return ds.Converter(rings=True, branches=True).encode(smiles)
 
@@ -318,17 +316,17 @@ def main():
             #     "is_imbalanced": False,
             #     "n": 4,
             # },
-            {
-                "dataset": "delaney",
-                "splitter": "random",
-                "task": "regression",
-                "k": 25,
-                "augment": 0,
-                "preprocess": False,
-                "sub_sample": 0.0,
-                "is_imbalanced": False,
-                "n": 4,
-            },
+            # {
+            #     "dataset": "delaney",
+            #     "splitter": "random",
+            #     "task": "regression",
+            #     "k": 25,
+            #     "augment": 0,
+            #     "preprocess": False,
+            #     "sub_sample": 0.0,
+            #     "is_imbalanced": False,
+            #     "n": 4,
+            # },
             # {
             #     "dataset": "lipo",
             #     "splitter": "random",
@@ -461,17 +459,17 @@ def main():
             #     "is_imbalanced": True,
             #     "n": 4,
             # },
-            # {
-            #     "dataset": "schneider",
-            #     "splitter": "random",
-            #     "task": "classification",
-            #     "k": 5,
-            #     "augment": 0,
-            #     "preprocess": True,
-            #     "sub_sample": 0.0,
-            #     "is_imbalanced": False,
-            #     "n": 1,
-            # },
+            {
+                "dataset": "schneider",
+                "splitter": "random",
+                "task": "classification",
+                "k": 5,
+                "augment": 0,
+                "preprocess": True,
+                "sub_sample": 0.0,
+                "is_imbalanced": False,
+                "n": 1,
+            },
         ]
     )
 
