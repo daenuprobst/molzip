@@ -10,14 +10,7 @@ from sklearn.metrics.pairwise import pairwise_distances
 
 
 def regress_(x1, X_train, y_train, k):
-    # print("x1", x1)
-    # print("X_train", X_train)
-    # print("y_train", y_train)
-    # print("k", k)
     Cx1 = len(gzip.compress(x1.encode()))
-    # print("Cx1", Cx1)
-    # print("encoding x1", gzip.compress(x1.encode()))
-    # print("encoding- x1",(x1.encode()))
           
     distance_from_x1 = []
 
@@ -38,7 +31,7 @@ def regress_(x1, X_train, y_train, k):
         dists = 1 - dists
         print((np.mean(vals * dists) / np.sum(dists)))
         task_preds.append(np.mean(vals * dists) / np.sum(dists))
-    
+    print(task_preds)
     return task_preds
 
 
