@@ -87,7 +87,7 @@ def augment(X: np.array, Y: np.array, n: int = 5) -> Tuple[np.array, np.array]:
 def MOFLoader(
     name: str, preproc: bool = False, **kwargs
 ) -> Tuple[str, np.array, np.array, np.array]:
-    task = "QMOF"
+    task = ["QMOF"]
     root_dir = Path(__file__).resolve().parent
     df = pd.read_csv(Path(root_dir, "data/QMOF_toy.csv"))
     train, test = train_test_split(df, test_size=0.3)
@@ -331,17 +331,17 @@ def benchmark(configs: List[Dict[str, Any]]) -> None:
 def main():
     benchmark(
         [
-            {
-                "dataset": "freesolv",
-                "splitter": "random",
-                "task": "regression",
-                "k": 25,
-                "augment": 0,
-                "preprocess": False,
-                "sub_sample": 0.0,
-                "is_imbalanced": False,
-                "n": 4,
-            },
+            # {
+            #     "dataset": "freesolv",
+            #     "splitter": "random",
+            #     "task": "regression",
+            #     "k": 25,
+            #     "augment": 0,
+            #     "preprocess": False,
+            #     "sub_sample": 0.0,
+            #     "is_imbalanced": False,
+            #     "n": 4,
+            # },
             # {
             #     "dataset": "delaney",
             #     "splitter": "random",
@@ -497,17 +497,17 @@ def main():
             #     "n": 1,
             # },
 
-            # {
-            #     "dataset": "MOF",
-            #     "splitter": "random",
-            #     "task": "regression",
-            #     "k": 25,
-            #     "augment": 0,
-            #     "preprocess": True,
-            #     "sub_sample": 0.0,
-            #     "is_imbalanced": False,
-            #     "n": 4,
-            # },
+            {
+                "dataset": "MOF",
+                "splitter": "random",
+                "task": "regression",
+                "k": 25,
+                "augment": 0,
+                "preprocess": True,
+                "sub_sample": 0.0,
+                "is_imbalanced": False,
+                "n": 4,
+            },
 
         ]
     )
