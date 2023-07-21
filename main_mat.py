@@ -497,17 +497,17 @@ def main():
             #     "n": 1,
             # },
 
-            {
-                "dataset": "MOF",
-                "splitter": "random",
-                "task": "regression",
-                "k": 25,
-                "augment": 0,
-                "preprocess": True,
-                "sub_sample": 0.0,
-                "is_imbalanced": False,
-                "n": 4,
-            },
+            # {
+            #     "dataset": "MOF",
+            #     "splitter": "random",
+            #     "task": "regression",
+            #     "k": 25,
+            #     "augment": 0,
+            #     "preprocess": True,
+            #     "sub_sample": 0.0,
+            #     "is_imbalanced": False,
+            #     "n": 4,
+            # },
 
         ]
     )
