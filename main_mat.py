@@ -89,7 +89,7 @@ def MOFLoader(
 ) -> Tuple[str, np.array, np.array, np.array]:
     task = "QMOF"
     root_dir = Path(__file__).resolve().parent
-    df = pd.read_csv(Path(root_dir, "data/QMOF.csv"))
+    df = pd.read_csv(Path(root_dir, "data/QMOF_toy.csv"))
     train, test = train_test_split(df, test_size=0.3)
     val, test = train_test_split(test, test_size=0.5)
 
@@ -499,12 +499,12 @@ def main():
                 "dataset": "MOF",
                 "splitter": "random",
                 "task": "regression",
-                "k": 5,
+                "k": 25,
                 "augment": 0,
                 "preprocess": True,
                 "sub_sample": 0.0,
                 "is_imbalanced": False,
-                "n": 1,
+                "n": 4,
             },
 
         ]
