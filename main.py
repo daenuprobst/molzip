@@ -135,6 +135,7 @@ def preprocess(smiles: str, preproc: bool = False) -> str:
         allHsExplicit=True,
     )
 
+    print("tokenize", " ".join(tokenize(smiles)))
     return " ".join(tokenize(smiles))
 
 
