@@ -120,11 +120,9 @@ def augment(X: np.array, Y: np.array, n: int = 5) -> Tuple[np.array, np.array]:
 
 
 def preprocess(smiles: str, preproc: bool = False) -> str:
-    print("preproc", preproc)
-    print("smiles", to_secfp(smiles, min_radius=0))
     if not preproc:
-        #return smiles
-        return to_secfp(smiles, min_radius=0)
+        return smiles
+        #return to_secfp(smiles, min_radius=0)
         # return sf.encoder(smiles, strict=False)
         # return ds.Converter(rings=True, branches=True).encode(smiles)
 
@@ -135,7 +133,6 @@ def preprocess(smiles: str, preproc: bool = False) -> str:
         allHsExplicit=True,
     )
 
-    print("tokenize", " ".join(tokenize(smiles)))
     return " ".join(tokenize(smiles))
 
 

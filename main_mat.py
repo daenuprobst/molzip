@@ -2,11 +2,11 @@ from typing import List, Dict, Any, Tuple
 from pathlib import Path
 import numpy as np
 import pandas as pd
-# import deepchem.molnet as mn
-# import selfies as sf
-# import deepsmiles as ds
+import deepchem.molnet as mn
+import selfies as sf
+import deepsmiles as ds
 
-# from mhfp.encoder import MHFPEncoder
+from mhfp.encoder import MHFPEncoder
 
 from sklearn.metrics import (
     f1_score,
@@ -20,18 +20,14 @@ from sklearn.model_selection import train_test_split
 
 from pytablewriter import MarkdownTableWriter
 
-# from rdkit.Chem.AllChem import MolFromSmiles, MolToSmiles, MolToInchi
-# from rdkit import rdBase
+from rdkit.Chem.AllChem import MolFromSmiles, MolToSmiles, MolToInchi
+from rdkit import rdBase
 
 blocker = rdBase.BlockLogs()
 
 from gzip_classifier import classify
 from gzip_regressor import regress
 from smiles_tokenizer import tokenize
-
-def MatFeat(Formula: str) -> np.array:
-    return None
-
 
 def to_secfp(
     smiles: str,
@@ -48,40 +44,6 @@ def to_secfp(
             )
         ]
     )
-
-
-def write_table(results: List) -> None:
-    values = []
-
-    for config, result in results:
-        values.append(
-            [
-                config["dataset"],
-                config["splitter"],
-                result["valid_auroc"],
-                result["valid_f1"],
-                result["test_auroc"],
-                result["test_f1"],
-            ]
-        )
-
-    writer = MarkdownTableWriter(
-        table_name="Results Gzip-based Molecular Classification",
-        headers=[
-            "Data Set",
-            "Split",
-            "AUROC/RMSE (Valid)",
-            "F1/MAE (Valid)",
-            "AUROC/RMSE (Test)",
-            "F1/MAE (Test)",
-        ],
-        value_matrix=values,
-    )
-
-    with open("RESULTS.md", "w+") as f:
-        writer.stream = f
-        writer.write_table()
-
 
 def sub_sample(
     X: np.array, Y: np.array, p: float = 0.5, seed=666
@@ -115,8 +77,67 @@ def augment(X: np.array, Y: np.array, n: int = 5) -> Tuple[np.array, np.array]:
 
             X_aug.append(x_rand)
             y_aug.append(y)
-
+    print(f"Augmented {(X_aug)} samples")
+    print(f"Augmented {(y_aug)} samples")
     return np.array(X_aug), np.array(y_aug)
+
+
+
+
+def MOFLoader(
+    name: str, preproc: bool = False, **kwargs
+) -> Tuple[str, np.array, np.array, np.array]:
+    task = "QMOF"
+    root_dir = Path(__file__).resolve().parent
+    df = pd.read_csv(Path(root_dir, "data/QMOF.csv"))
+    train, test = train_test_split(df, test_size=0.3)
+    val, test = train_test_split(test, test_size=0.5)
+
+    X_train = np.array([row["SMILES"] for _, row in train.iterrows()])
+    y_train = np.array([row["QMOF"] for _, row in train.iterrows()], dtype=float)
+
+    X_valid = np.array([row["SMILES"] for _, row in val.iterrows()])
+    y_valid = np.array([row["QMOF"] for _, row in val.iterrows()], dtype=float)
+
+    X_test = np.array([row["SMILES"] for _, row in test.iterrows()])
+    y_test = np.array([row["QMOF"] for _, row in test.iterrows()], dtype=float)
+
+    return task, X_train, y_train, X_valid, y_valid, X_test, y_test
+
+
+
+
+def write_table(results: List) -> None:
+    values = []
+
+    for config, result in results:
+        values.append(
+            [
+                config["dataset"],
+                config["splitter"],
+                result["valid_auroc"],
+                result["valid_f1"],
+                result["test_auroc"],
+                result["test_f1"],
+            ]
+        )
+
+    writer = MarkdownTableWriter(
+        table_name="Results Gzip-based Molecular Classification",
+        headers=[
+            "Data Set",
+            "Split",
+            "AUROC/RMSE (Valid)",
+            "F1/MAE (Valid)",
+            "AUROC/RMSE (Test)",
+            "F1/MAE (Test)",
+        ],
+        value_matrix=values,
+    )
+
+    with open("RESULTS.md", "w+") as f:
+        writer.stream = f
+        writer.write_table()
 
 
 def preprocess(smiles: str, preproc: bool = False) -> str:
@@ -193,6 +214,9 @@ def benchmark(configs: List[Dict[str, Any]]) -> None:
 
         if config["dataset"] in ["schneider"]:
             loader = schneider_loader
+        
+        if config["dataset"] in ["MOF"]:
+            loader = MOFLoader
 
         run_results = []
         for _ in range(config["n"]):
@@ -459,10 +483,22 @@ def main():
             #     "is_imbalanced": True,
             #     "n": 4,
             # },
+            # {
+            #     "dataset": "schneider",
+            #     "splitter": "random",
+            #     "task": "classification",
+            #     "k": 5,
+            #     "augment": 0,
+            #     "preprocess": True,
+            #     "sub_sample": 0.0,
+            #     "is_imbalanced": False,
+            #     "n": 1,
+            # },
+
             {
-                "dataset": "schneider",
+                "dataset": "MOF",
                 "splitter": "random",
-                "task": "classification",
+                "task": "regression",
                 "k": 5,
                 "augment": 0,
                 "preprocess": True,
@@ -470,6 +506,7 @@ def main():
                 "is_imbalanced": False,
                 "n": 1,
             },
+
         ]
     )
 
