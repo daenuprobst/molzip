@@ -29,9 +29,9 @@ def regress_(x1, X_train, y_train, k):
     task_preds = []
     for vals, dists in zip(np.array(top_k_values).T, np.array(top_k_dists).T):
         dists = 1 - dists
-        print((np.mean(vals * dists) / np.sum(dists)))
+        print("mean", (np.mean(vals * dists) / np.sum(dists)))
         task_preds.append(np.mean(vals * dists) / np.sum(dists))
-    print(task_preds)
+    print("task", task_preds)
     return task_preds
 
 
