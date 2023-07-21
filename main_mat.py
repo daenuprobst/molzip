@@ -288,6 +288,8 @@ def benchmark(configs: List[Dict[str, Any]]) -> None:
                 test_preds = regress(X_train, y_train, X_test, config["k"])
 
                 # Compute metrics
+                print("y_valid", y_valid)
+                print("valid_preds", valid_preds)
                 valid_rmse = mean_squared_error(y_valid, valid_preds, squared=False)
                 valid_mae = mean_absolute_error(
                     y_valid,
