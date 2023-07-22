@@ -167,6 +167,7 @@ def molnet_loader(
     train, valid, test = dataset
 
     X_train = np.array([preprocess(x, preproc) for x in train.ids])
+    print(tasks)
     y_train = np.array(train.y, dtype=int)
 
     X_valid = np.array([preprocess(x, preproc) for x in valid.ids])
