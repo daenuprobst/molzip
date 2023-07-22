@@ -148,19 +148,19 @@ def molnet_loader(
     if task_type == "classification":
         y_train = np.array(train.y, dtype=int)
     else:
-        y_train = np.array(train.y, dtype=float)
+        y_train = np.array(train.y, dtype=int)
 
     X_valid = np.array([preprocess(x, preproc) for x in valid.ids])
     if task_type == "classification":
         y_valid = np.array(valid.y, dtype=int)
     else:
-        y_valid = np.array(valid.y, dtype=float)
+        y_valid = np.array(valid.y, dtype=int)
 
     X_test = np.array([preprocess(x, preproc) for x in test.ids])
     if task_type == "classification":
         y_test = np.array(test.y, dtype=int)
     else:
-        y_test = np.array(test.y, dtype=float)
+        y_test = np.array(test.y, dtype=int)
 
     return tasks, X_train, y_train, X_valid, y_valid, X_test, y_test
 
