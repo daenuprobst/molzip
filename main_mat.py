@@ -294,8 +294,10 @@ def benchmark(configs: List[Dict[str, Any]]) -> None:
 
                 run_results.append([valid_auroc, valid_f1, test_auroc, test_f1])
             else:
-                print('valid_preds_shape',valid_preds.shape)
+
                 valid_preds = regress(X_train, y_train, X_valid, config["k"])
+                print('valid_preds_shape',valid_preds.shape)
+                print("y_valid_shape",y_valid.shape)
                 test_preds = regress(X_train, y_train, X_test, config["k"])
 
                 # Compute metrics
