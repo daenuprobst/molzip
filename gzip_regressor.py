@@ -33,12 +33,12 @@ def regress_(x1, X_train, y_train, k):
 
     print("top_k_dist",top_k_dists_array.shape)
     print("top_k_values",top_k_values_array.shape)
-    for vals, dists in zip(top_k_values_array, top_k_dists_array):
-        print("vals",vals.shape)
-        print("dists",dists.shape)
-        dists = 1 - dists
-        task_preds.append(np.mean(vals * dists) / np.sum(dists))
-    print("task_preds",task_preds)
+    
+    dists = 1 - top_k_dists_array  # apply the transformation to all distances at once
+    weighted_values = top_k_values_array * dists  # element-wise multiplication
+    task_preds = np.sum(weighted_values) / np.sum(dists)  # a single prediction
+
+    print("task_pred", task_preds)
     return task_preds
 
 
