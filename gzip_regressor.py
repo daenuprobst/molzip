@@ -10,6 +10,7 @@ from sklearn.metrics.pairwise import pairwise_distances
 
 
 def regress_(x1, X_train, y_train, k):
+    print(x1)
     Cx1 = len(gzip.compress(x1.encode()))
           
     distance_from_x1 = []
