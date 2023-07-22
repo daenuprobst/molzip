@@ -94,13 +94,13 @@ def MOFLoader(
     val, test = train_test_split(test, test_size=0.5)
 
     X_train = np.array([row["SMILES"] for _, row in train.iterrows()])
-    y_train = np.array([row["QMOF"] for _, row in train.iterrows()], dtype=float)
+    y_train = np.array([row["QMOF"] for _, row in train.iterrows()], dtype=float).shape(1,-1)
 
     X_valid = np.array([row["SMILES"] for _, row in val.iterrows()])
-    y_valid = np.array([row["QMOF"] for _, row in val.iterrows()], dtype=float)
+    y_valid = np.array([row["QMOF"] for _, row in val.iterrows()], dtype=float).shape(1,-1)
 
     X_test = np.array([row["SMILES"] for _, row in test.iterrows()])
-    y_test = np.array([row["QMOF"] for _, row in test.iterrows()], dtype=float)
+    y_test = np.array([row["QMOF"] for _, row in test.iterrows()], dtype=float).shape(1,-1)
 
     return task, X_train, y_train, X_valid, y_valid, X_test, y_test
 
