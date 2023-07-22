@@ -38,6 +38,7 @@ def regress_(x1, X_train, y_train, k):
         print("dists",dists.shape)
         dists = 1 - dists
         task_preds.append(np.mean(vals * dists) / np.sum(dists))
+    print("task_preds",task_preds)
     return task_preds
 
 
