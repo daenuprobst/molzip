@@ -24,7 +24,7 @@ def regress_(x1, X_train, y_train, k):
 
     distance_from_x1 = np.array(distance_from_x1)
     sorted_idx = np.argsort(distance_from_x1)
-    print("y_train", y_train)
+    #print("y_train", y_train)
     top_k_values = y_train[sorted_idx[:k]]
     top_k_dists = distance_from_x1[sorted_idx[:k]]
 
