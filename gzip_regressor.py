@@ -24,11 +24,11 @@ def regress_(x1, X_train, y_train, k):
 
     distance_from_x1 = np.array(distance_from_x1)
     sorted_idx = np.argsort(distance_from_x1)
-    top_k_values = [y_train[sorted_idx[:k]]]
+    top_k_values = y_train[sorted_idx[:k]]
     top_k_dists = distance_from_x1[sorted_idx[:k]]
 
     task_preds = []
-    print("top_k_values", np.array(top_k_values).T)
+    print("top_k_values", np.array([top_k_values]).T)
     print("top_k_dists", np.array(top_k_dists).T)
 
     print("top_k_values_shape", (np.array(top_k_values).T).shape)
