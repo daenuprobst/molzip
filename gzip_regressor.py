@@ -29,7 +29,7 @@ def regress_(x1, X_train, y_train, k):
     task_preds = []
 
     top_k_dists_array = np.array(top_k_dists).T
-    top_k_values_array = np.array(top_k_values).T.reshape(1,-1)
+    top_k_values_array = np.array(top_k_values).T#.reshape(1,-1)
 
     print("top_k_dist",top_k_dists_array.shape)
     print("top_k_values",top_k_values_array.shape)
