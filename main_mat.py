@@ -158,25 +158,31 @@ def preprocess(smiles: str, preproc: bool = False) -> str:
 
 
 def molnet_loader(
-    name: str, preproc: bool = False, **kwargs
+    name: str, task_type: str, preproc: bool = False, **kwargs
 ) -> Tuple[str, np.array, np.array, np.array]:
     mn_loader = getattr(mn, f"load_{name}")
     dc_set = mn_loader(**kwargs)
 
     tasks, dataset, _ = dc_set
     train, valid, test = dataset
-
     X_train = np.array([preprocess(x, preproc) for x in train.ids])
-    print(tasks)
-    y_train = np.array(train.y, dtype=int)
+    if task_type == "classification":
+        y_train = np.array(train.y, dtype=int)
+    else:
+        y_train = np.array(train.y, dtype=float)
 
     X_valid = np.array([preprocess(x, preproc) for x in valid.ids])
-    y_valid = np.array(valid.y, dtype=int)
+    if task_type == "classification":
+        y_valid = np.array(valid.y, dtype=int)
+    else:
+        y_valid = np.array(valid.y, dtype=float)
 
     X_test = np.array([preprocess(x, preproc) for x in test.ids])
-    y_test = np.array(test.y, dtype=int)
-    print("y_train", y_train)
-    exit()
+    if task_type == "classification":
+        y_test = np.array(test.y, dtype=int)
+    else:
+        y_test = np.array(test.y, dtype=float)
+
     return tasks, X_train, y_train, X_valid, y_valid, X_test, y_test
 
 
@@ -224,10 +230,12 @@ def benchmark(configs: List[Dict[str, Any]]) -> None:
         for _ in range(config["n"]):
             tasks, X_train, y_train, X_valid, y_valid, X_test, y_test = loader(
                 config["dataset"],
+                task_type = config["task"],
                 splitter=config["splitter"],
                 preproc=config["preprocess"],
                 reload=False,
                 transformers=[],
+
             )
 
             if config["augment"] > 0:
