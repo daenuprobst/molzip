@@ -174,7 +174,7 @@ def molnet_loader(
 
     X_test = np.array([preprocess(x, preproc) for x in test.ids])
     y_test = np.array(test.y, dtype=int)
-
+    print("y_train", y_train)
     return tasks, X_train, y_train, X_valid, y_valid, X_test, y_test
 
 
