@@ -192,7 +192,6 @@ def schneider_loader(
     # Just use test set as valid as no valid set is profided as is
     return ["Reaction Class"], X_train, y_train, X_test, y_test, X_test, y_test
 
-
 def benchmark(configs: List[Dict[str, Any]]) -> None:
     results = []
 

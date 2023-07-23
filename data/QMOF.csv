@@ -1,4 +1,4 @@
-SMILES,QMOF
+SMILES,Prop
 [O-]C(=O)c1cc2c3c(c1)c(N(=O)=O)c(c1c3c(c(c2N(=O)=O)N(=O)=O)cc(c1)C(=O)[O-])N(=O)=O.[Zn][O]([Zn])([Zn])[Zn]&&pcu.cat0,2.201034
 Cl[Cd].O=C1[N]NC(=O)c2c1nccc2&&fes.cat0,2.0555
 [Zn].c1ccc2c(c1)N=C[N]2&&sod.cat0,3.677709

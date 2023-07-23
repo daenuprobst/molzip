@@ -26,7 +26,7 @@ from rdkit import rdBase
 blocker = rdBase.BlockLogs()
 
 from gzip_classifier import classify
-from gzip_regressor import regress
+from gzip_mat_regressor import regress
 from smiles_tokenizer import tokenize
 
 def to_secfp(
@@ -86,7 +86,7 @@ def augment(X: np.array, Y: np.array, n: int = 5) -> Tuple[np.array, np.array]:
 
 def MOFLoader(
     name: str, preproc: bool = False, **kwargs
-) -> Tuple[str, np.array, np.array, np.array]:
+) -> Tuple[str, np.array, np.array, np.array]:  ### Use the same signature as molecular datasets.
     task = ["QMOF"]
     root_dir = Path(__file__).resolve().parent
     df = pd.read_csv(Path(root_dir, "data/QMOF.csv"))
@@ -94,17 +94,15 @@ def MOFLoader(
     val, test = train_test_split(test, test_size=0.5)
 
     X_train = np.array([row["SMILES"] for _, row in train.iterrows()])
-    y_train = np.array([row["QMOF"] for _, row in train.iterrows()], dtype=int)#.reshape(1,-1)
+    y_train = np.array([row["Prop"] for _, row in train.iterrows()], dtype=float)
 
     X_valid = np.array([row["SMILES"] for _, row in val.iterrows()])
-    y_valid = np.array([row["QMOF"] for _, row in val.iterrows()], dtype=int)#.reshape(1,-1)
+    y_valid = np.array([row["Prop"] for _, row in val.iterrows()], dtype=float)
 
     X_test = np.array([row["SMILES"] for _, row in test.iterrows()])
-    y_test = np.array([row["QMOF"] for _, row in test.iterrows()], dtype=int)#.reshape(1,-1)
+    y_test = np.array([row["Prop"] for _, row in test.iterrows()], dtype=float)
 
     return task, X_train, y_train, X_valid, y_valid, X_test, y_test
-
-
 
 
 def write_table(results: List) -> None:
@@ -296,8 +294,6 @@ def benchmark(configs: List[Dict[str, Any]]) -> None:
             else:
 
                 valid_preds = regress(X_train, y_train, X_valid, config["k"])
-                print('valid_preds_shape',valid_preds.shape)
-                print("y_valid_shape",y_valid.shape)
                 test_preds = regress(X_train, y_train, X_test, config["k"])
 
                 # Compute metrics
@@ -512,7 +508,7 @@ def main():
                 "dataset": "MOF",
                 "splitter": "random",
                 "task": "regression",
-                "k": 10,
+                "k": 25,
                 "augment": 0,
                 "preprocess": True,
                 "sub_sample": 0.0,
