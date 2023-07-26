@@ -1,5 +1,7 @@
 from typing import List, Dict, Any, Tuple
+from pathlib import Path
 import numpy as np
+import pandas as pd
 import deepchem.molnet as mn
 import selfies as sf
 import deepsmiles as ds
@@ -25,6 +27,8 @@ blocker = rdBase.BlockLogs()
 from gzip_classifier import classify
 from gzip_regressor import regress
 from smiles_tokenizer import tokenize
+
+enc = MHFPEncoder()
 
 
 def to_secfp(
@@ -116,9 +120,9 @@ def augment(X: np.array, Y: np.array, n: int = 5) -> Tuple[np.array, np.array]:
 def preprocess(smiles: str, preproc: bool = False) -> str:
     if not preproc:
         return smiles
-        return to_secfp(smiles, min_radius=0)
-        return sf.encoder(smiles, strict=False)
-        return ds.Converter(rings=True, branches=True).encode(smiles)
+        # return to_secfp(smiles, min_radius=0)
+        # return sf.encoder(smiles, strict=False)
+        # return ds.Converter(rings=True, branches=True).encode(smiles)
 
     smiles = MolToSmiles(
         MolFromSmiles(smiles),
@@ -132,7 +136,7 @@ def preprocess(smiles: str, preproc: bool = False) -> str:
 
 def molnet_loader(
     name: str, preproc: bool = False, **kwargs
-) -> List[Tuple[str, np.array, np.array, np.array]]:
+) -> Tuple[str, np.array, np.array, np.array]:
     mn_loader = getattr(mn, f"load_{name}")
     dc_set = mn_loader(**kwargs)
 
@@ -151,15 +155,46 @@ def molnet_loader(
     return tasks, X_train, y_train, X_valid, y_valid, X_test, y_test
 
 
+# Just use the same signature as for molnet_loader... it feels so wrong so it probably is pythonic
+def schneider_loader(
+    name: str, preproc: bool = False, **kwargs
+) -> Tuple[str, np.array, np.array, np.array]:
+    base_path = Path(__file__).resolve().parent
+    df = pd.read_csv(Path(base_path, "data/schneider50k.tsv.gz"), sep="\t")
+    X_train = np.array([row["rxn"] for _, row in df[df.split == "train"].iterrows()])
+    y_train = np.array(
+        [
+            [int(row["rxn_class"].split(".")[0])]
+            for _, row in df[df.split == "train"].iterrows()
+        ],
+        dtype=int,
+    )
+
+    X_test = np.array([row["rxn"] for _, row in df[df.split == "test"].iterrows()])
+    y_test = np.array(
+        [
+            [int(row["rxn_class"].split(".")[0])]
+            for _, row in df[df.split == "test"].iterrows()
+        ],
+        dtype=int,
+    )
+
+    # Just use test set as valid as no valid set is profided as is
+    return ["Reaction Class"], X_train, y_train, X_test, y_test, X_test, y_test
+
+
 def benchmark(configs: List[Dict[str, Any]]) -> None:
     results = []
 
     for config in configs:
-        # Load data sets
+        loader = molnet_loader
+
+        if config["dataset"] in ["schneider"]:
+            loader = schneider_loader
 
         run_results = []
         for _ in range(config["n"]):
-            tasks, X_train, y_train, X_valid, y_valid, X_test, y_test = molnet_loader(
+            tasks, X_train, y_train, X_valid, y_valid, X_test, y_test = loader(
                 config["dataset"],
                 splitter=config["splitter"],
                 preproc=config["preprocess"],
@@ -193,13 +228,22 @@ def benchmark(configs: List[Dict[str, Any]]) -> None:
                 )
 
                 # Compute metrics
-                valid_auroc = roc_auc_score(y_valid, valid_preds)
+                try:
+                    valid_auroc = roc_auc_score(y_valid, valid_preds, multi_class="ovr")
+                except:
+                    valid_auroc = 0.0
+
                 valid_f1 = f1_score(
                     y_valid,
                     valid_preds,
                     average="micro",
                 )
-                test_auroc = roc_auc_score(y_test, test_preds)
+
+                try:
+                    test_auroc = roc_auc_score(y_test, test_preds, multi_class="ovr")
+                except:
+                    test_auroc = 0.0
+
                 test_f1 = f1_score(
                     y_test,
                     test_preds,
@@ -259,50 +303,50 @@ def benchmark(configs: List[Dict[str, Any]]) -> None:
 def main():
     benchmark(
         [
-            # {
-            #     "dataset": "freesolv",
-            #     "splitter": "random",
-            #     "task": "regression",
-            #     "k": 10,
-            #     "augment": 0,
-            #     "preprocess": True,
-            #     "sub_sample": 0.0,
-            #     "is_imbalanced": True,
-            #     "n": 4,
-            # },
-            # {
-            #     "dataset": "delaney",
-            #     "splitter": "random",
-            #     "task": "regression",
-            #     "k": 10,
-            #     "augment": 0,
-            #     "preprocess": True,
-            #     "sub_sample": 0.0,
-            #     "is_imbalanced": True,
-            #     "n": 4,
-            # },
-            # {
-            #     "dataset": "lipo",
-            #     "splitter": "random",
-            #     "task": "regression",
-            #     "k": 10,
-            #     "augment": 0,
-            #     "preprocess": True,
-            #     "sub_sample": 0.0,
-            #     "is_imbalanced": True,
-            #     "n": 4,
-            # },
             {
-                "dataset": "hiv",
+                "dataset": "freesolv",
                 "splitter": "random",
-                "task": "classification",
-                "k": 5,
+                "task": "regression",
+                "k": 10,
                 "augment": 0,
                 "preprocess": False,
                 "sub_sample": 0.0,
                 "is_imbalanced": True,
                 "n": 4,
             },
+            {
+                "dataset": "delaney",
+                "splitter": "random",
+                "task": "regression",
+                "k": 10,
+                "augment": 0,
+                "preprocess": False,
+                "sub_sample": 0.0,
+                "is_imbalanced": True,
+                "n": 4,
+            },
+            {
+                "dataset": "lipo",
+                "splitter": "random",
+                "task": "regression",
+                "k": 10,
+                "augment": 0,
+                "preprocess": False,
+                "sub_sample": 0.0,
+                "is_imbalanced": True,
+                "n": 4,
+            },
+            # {
+            #     "dataset": "hiv",
+            #     "splitter": "random",
+            #     "task": "classification",
+            #     "k": 5,
+            #     "augment": 0,
+            #     "preprocess": False,
+            #     "sub_sample": 0.0,
+            #     "is_imbalanced": True,
+            #     "n": 4,
+            # },
             # {
             #     "dataset": "sider",
             #     "splitter": "random",
@@ -357,6 +401,28 @@ def main():
             #     "sub_sample": 0.0,
             #     "is_imbalanced": True,
             #     "n": 4,
+            # },
+            # {
+            #     "dataset": "muv",
+            #     "splitter": "random",
+            #     "task": "classification",
+            #     "k": 5,
+            #     "augment": 0,
+            #     "preprocess": False,
+            #     "sub_sample": 0.0,
+            #     "is_imbalanced": True,
+            #     "n": 4,
+            # },
+            # {
+            #     "dataset": "schneider",
+            #     "splitter": "random",
+            #     "task": "classification",
+            #     "k": 5,
+            #     "augment": 0,
+            #     "preprocess": False,
+            #     "sub_sample": 0.0,
+            #     "is_imbalanced": False,
+            #     "n": 1,
             # },
         ]
     )

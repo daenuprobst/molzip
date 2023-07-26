@@ -45,13 +45,21 @@ Using SECFP (ECFP-style circular substructures as SMILES) doesn't increase the c
 |tox21              |random  |0.712 +/- 0.011|0.305 +/- 0.011|0.718 +/- 0.011|0.31 +/- 0.011 |
 |sider              |random  |0.604 +/- 0.022|0.62 +/- 0.022 |0.614 +/- 0.022|0.624 +/- 0.022|
 
-Implementing a GZip-based regressor (kNN, k=10) shows performance comparable to baseline performance of common ML implementations from MoleculeNet (https://moleculenet.org/full-results).
+Implementing a GZip-based regressor (weighted kNN, k=10) shows performance comparable to baseline performance of common ML implementations from MoleculeNet (https://moleculenet.org/full-results).
+Interestingly there are improvements when the SMILES are tokenised.
 
-|Data Set|Split |AUROC/RMSE (Valid)|F1/MAE (Valid) |AUROC/RMSE (Test)|F1/MAE (Test) |
-|--------|------|------------------|---------------|-----------------|--------------|
-|freesolv|random|0.567 +/- 0.155   |0.302 +/- 0.155|0.465 +/- 0.155  |0.31 +/- 0.155|
-|delaney |random|1.362 +/- 0.14    |1.05 +/- 0.14  |1.371 +/- 0.14   |1.005 +/- 0.14|
-|lipo    |random|0.93 +/- 0.013    |0.724 +/- 0.013|0.939 +/- 0.013  |0.73 +/- 0.013|
+|Data Set|Split |AUROC/RMSE (Valid)|F1/MAE (Valid) |AUROC/RMSE (Test)| F1/MAE (Test) |
+|--------|------|------------------|---------------|-----------------|---------------|
+|freesolv|random|0.514 +/- 0.098   |0.295 +/- 0.098|0.512 +/- 0.098  |0.283 +/- 0.098|
+|delaney |random|1.221 +/- 0.084   |0.921 +/- 0.084|1.155 +/- 0.084  |0.894 +/- 0.084|
+|lipo    |random|0.914 +/- 0.034   |0.722 +/- 0.034|0.898 +/- 0.034  |0.714 +/- 0.034|
+
+The classifier is also able to classify raw reaction SMILES from the Schneider50k data set (no class weighting).
+
+|Data Set |Split |AUROC/RMSE (Valid)|F1/MAE (Valid)|AUROC/RMSE (Test)|F1/MAE (Test)|
+|---------|------|------------------|--------------|-----------------|-------------|
+|schneider|random|0.0 +/- 0.0       |0.801 +/- 0.0 |0.0 +/- 0.0      |0.801 +/- 0.0|
+
 
 ## Discussion
 TBD
