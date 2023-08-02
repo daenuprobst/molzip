@@ -9,6 +9,7 @@ from scipy.linalg import solve
 from sklearn.metrics.pairwise import pairwise_distances
 from sklearn.model_selection import KFold
 from sklearn.metrics import mean_squared_error
+from sklearn.manifold import MDS
 
 def regress_(x1, X_train, y_train, k):
     Cx1 = len(gzip.compress(x1.encode()))
@@ -154,3 +155,38 @@ def cross_val_and_fit_kernel_ridge(X, y, k, gammas, lambdas):
     best_alpha = train_kernel_ridge_regression(X, y, best_gamma, best_lambda_)
 
     return best_alpha, best_gamma, best_lambda_, best_score
+
+def ncd_pca(X, n_components=2):
+    """
+    Performs a Principal Component Analysis (PCA) like transformation of the input data using 
+    the Normalized Compression Distance (NCD) and Multi-Dimensional Scaling (MDS).
+
+    The function first computes a dissimilarity matrix based on NCD, then it ensures the 
+    dissimilarity matrix is symmetric by averaging with its transpose. After that, MDS is used 
+    to reduce the dimensionality of the data.
+
+    Parameters
+    ----------
+    X : array-like
+        The input data, where each row is a separate observation.
+
+    n_components : int, optional
+        The number of components to keep after the dimensionality reduction, default is 2.
+
+    Returns
+    -------
+    X_transformed : ndarray, shape (n_samples, n_components)
+        The transformed data.
+
+    Example
+    -------
+    >>> X = np.random.rand(100, 50)  # 100 observations with 50 features each
+    >>> X_transformed = ncd_pca(X, n_components=2)
+    """
+
+    dissimilarity_matrix = compute_ncd(X, X)
+    dissimilarity_matrix = (dissimilarity_matrix + dissimilarity_matrix.T) / 2
+    mds = MDS(n_components=n_components, dissimilarity='precomputed', random_state=42)
+    X_transformed = mds.fit_transform(dissimilarity_matrix)
+
+    return X_transformed
