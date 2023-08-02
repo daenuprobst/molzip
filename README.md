@@ -25,15 +25,18 @@ The current results are presented in the table below. Data sets with random spli
 |sider              |random  |0.56 +/- 0.007 |0.788 +/- 0.007|0.563 +/- 0.007|0.778 +/- 0.007|
 
 Implementing a weighted version of the kNN algorithm does not necessary lead to better classification performance on unbalanced data sets.
-
-|     Data Set      | Split  | AUROC (Valid) |  F1 (Valid)   | AUROC (Test)  |   F1 (Test)   |
-|-------------------|--------|---------------|---------------|---------------|---------------|
-|bbbp               |scaffold|0.917 +/- 0.0  |0.917 +/- 0.0  |0.632 +/- 0.0  |0.623 +/- 0.0  |
-|bace_classification|random  |0.784 +/- 0.02 |0.783 +/- 0.02 |0.772 +/- 0.02 |0.771 +/- 0.02 |
-|clintox            |random  |0.944 +/- 0.02 |0.91 +/- 0.02  |0.884 +/- 0.02 |0.905 +/- 0.02 |
-|tox21              |random  |0.69 +/- 0.013 |0.285 +/- 0.013|0.697 +/- 0.013|0.295 +/- 0.013|
-|sider              |random  |0.592 +/- 0.011|0.649 +/- 0.011|0.609 +/- 0.011|0.659 +/- 0.011|
-|hiv                |random  |0.756 +/- 0.015|0.897 +/- 0.005|0.77 +/- 0.01  |0.9   +/- 0.001|
+|     Data Set      | Split  |AUROC/RMSE (Valid)|F1/MAE (Valid) |AUROC/RMSE (Test)| F1/MAE (Test) |
+|-------------------|--------|------------------|---------------|-----------------|---------------|
+|sider              |scaffold|0.551 +/- 0.0     |0.707 +/- 0.0  |0.577 +/- 0.0    |0.666 +/- 0.0  |
+|sider              |random  |0.454 +/- 0.262   |0.657 +/- 0.262|0.581 +/- 0.262  |0.647 +/- 0.262|
+|bbbp               |scaffold|0.931 +/- 0.0     |0.931 +/- 0.0  |0.639 +/- 0.0    |0.627 +/- 0.0  |
+|bace_classification|scaffold|0.694 +/- 0.0     |0.702 +/- 0.0  |0.701 +/- 0.0    |0.697 +/- 0.0  |
+|bace_classification|random  |0.817 +/- 0.005   |0.815 +/- 0.005|0.774 +/- 0.005  |0.771 +/- 0.005|
+|clintox            |scaffold|0.805 +/- 0.0     |0.854 +/- 0.0  |0.891 +/- 0.0    |0.891 +/- 0.0  |
+|clintox            |random  |0.925 +/- 0.032   |0.924 +/- 0.032|0.913 +/- 0.032  |0.91 +/- 0.032 |
+|tox21              |scaffold|0.635 +/- 0.0     |0.247 +/- 0.0  |0.618 +/- 0.0    |0.227 +/- 0.0  |
+|tox21              |random  |0.705 +/- 0.006   |0.295 +/- 0.006|0.694 +/- 0.006  |0.29 +/- 0.006 |
+|hiv                |scaffold|0.714 +/- 0.0     |0.901 +/- 0.0  |0.689 +/- 0.0    |0.887 +/- 0.0  |
 
 Using SECFP (ECFP-style circular substructures as SMILES) doesn't increase the classification performance of the weighted kNN.
 
@@ -50,9 +53,9 @@ Interestingly there are improvements when the SMILES are tokenised.
 
 |Data Set|Split |AUROC/RMSE (Valid)|F1/MAE (Valid) |AUROC/RMSE (Test)| F1/MAE (Test) |
 |--------|------|------------------|---------------|-----------------|---------------|
-|freesolv|random|0.514 +/- 0.098   |0.295 +/- 0.098|0.512 +/- 0.098  |0.283 +/- 0.098|
-|delaney |random|1.221 +/- 0.084   |0.921 +/- 0.084|1.155 +/- 0.084  |0.894 +/- 0.084|
-|lipo    |random|0.914 +/- 0.034   |0.722 +/- 0.034|0.898 +/- 0.034  |0.714 +/- 0.034|
+|freesolv|random|0.641 +/- 0.144   |0.375 +/- 0.144|0.527 +/- 0.144  |0.321 +/- 0.144|
+|delaney |random|1.443 +/- 0.088   |1.097 +/- 0.088|1.283 +/- 0.088  |0.966 +/- 0.088|
+|lipo    |random|0.938 +/- 0.042   |0.765 +/- 0.042|0.911 +/- 0.042  |0.727 +/- 0.042|
 
 The classifier is also able to classify raw reaction SMILES from the Schneider50k data set (no class weighting).
 

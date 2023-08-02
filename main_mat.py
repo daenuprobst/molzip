@@ -23,14 +23,11 @@ from pytablewriter import MarkdownTableWriter
 from rdkit.Chem.AllChem import MolFromSmiles, MolToSmiles, MolToInchi
 from rdkit import rdBase
 
-#blocker = rdBase.BlockLogs()
+blocker = rdBase.BlockLogs()
 
 from gzip_classifier import classify
-from gzip_regressor import regress, cross_val_and_fit_kernel_ridge,predict_kernel_ridge_regression
+from gzip_mat_regressor import regress
 from smiles_tokenizer import tokenize
-
-enc = MHFPEncoder()
-
 
 def to_secfp(
     smiles: str,
@@ -47,6 +44,65 @@ def to_secfp(
             )
         ]
     )
+
+def sub_sample(
+    X: np.array, Y: np.array, p: float = 0.5, seed=666
+) -> Tuple[np.array, np.array]:
+    X_sample, _, y_sample, _ = train_test_split(
+        X,
+        Y,
+        train_size=int(p * len(X)),
+        stratify=Y,
+        random_state=seed,
+    )
+
+    return X_sample, y_sample
+
+
+def augment(X: np.array, Y: np.array, n: int = 5) -> Tuple[np.array, np.array]:
+    X_aug = []
+    y_aug = []
+
+    for x, y in zip(X, Y):
+        mol = MolFromSmiles(x)
+        for _ in range(n):
+            x_rand = MolToSmiles(
+                mol,
+                canonical=False,
+                doRandom=True,
+                kekuleSmiles=True,
+                allBondsExplicit=True,
+                allHsExplicit=True,
+            )
+
+            X_aug.append(x_rand)
+            y_aug.append(y)
+    print(f"Augmented {(X_aug)} samples")
+    print(f"Augmented {(y_aug)} samples")
+    return np.array(X_aug), np.array(y_aug)
+
+
+
+
+def MOFLoader(
+    name: str, preproc: bool = False, **kwargs
+) -> Tuple[str, np.array, np.array, np.array]:  ### Use the same signature as molecular datasets.
+    task = ["QMOF"]
+    root_dir = Path(__file__).resolve().parent
+    df = pd.read_csv(Path(root_dir, "data/QMOF.csv"))
+    train, test = train_test_split(df, test_size=0.3)
+    val, test = train_test_split(test, test_size=0.5)
+
+    X_train = np.array([row["SMILES"] for _, row in train.iterrows()])
+    y_train = np.array([row["Prop"] for _, row in train.iterrows()], dtype=float)
+
+    X_valid = np.array([row["SMILES"] for _, row in val.iterrows()])
+    y_valid = np.array([row["Prop"] for _, row in val.iterrows()], dtype=float)
+
+    X_test = np.array([row["SMILES"] for _, row in test.iterrows()])
+    y_test = np.array([row["Prop"] for _, row in test.iterrows()], dtype=float)
+
+    return task, X_train, y_train, X_valid, y_valid, X_test, y_test
 
 
 def write_table(results: List) -> None:
@@ -82,42 +138,6 @@ def write_table(results: List) -> None:
         writer.write_table()
 
 
-def sub_sample(
-    X: np.array, Y: np.array, p: float = 0.5, seed=666
-) -> Tuple[np.array, np.array]:
-    X_sample, _, y_sample, _ = train_test_split(
-        X,
-        Y,
-        train_size=int(p * len(X)),
-        stratify=Y,
-        random_state=seed,
-    )
-
-    return X_sample, y_sample
-
-
-def augment(X: np.array, Y: np.array, n: int = 5) -> Tuple[np.array, np.array]:
-    X_aug = []
-    y_aug = []
-
-    for x, y in zip(X, Y):
-        mol = MolFromSmiles(x)
-        for _ in range(n):
-            x_rand = MolToSmiles(
-                mol,
-                canonical=False,
-                doRandom=True,
-                kekuleSmiles=True,
-                allBondsExplicit=True,
-                allHsExplicit=True,
-            )
-
-            X_aug.append(x_rand)
-            y_aug.append(y)
-
-    return np.array(X_aug), np.array(y_aug)
-
-
 def preprocess(smiles: str, preproc: bool = False) -> str:
     if not preproc:
         return smiles
@@ -136,22 +156,30 @@ def preprocess(smiles: str, preproc: bool = False) -> str:
 
 
 def molnet_loader(
-    name: str, preproc: bool = False, **kwargs
+    name: str, task_type: str, preproc: bool = False, **kwargs
 ) -> Tuple[str, np.array, np.array, np.array]:
     mn_loader = getattr(mn, f"load_{name}")
     dc_set = mn_loader(**kwargs)
 
     tasks, dataset, _ = dc_set
     train, valid, test = dataset
-
     X_train = np.array([preprocess(x, preproc) for x in train.ids])
-    y_train = np.array(train.y, dtype=int)
+    if task_type == "classification":
+        y_train = np.array(train.y, dtype=int)
+    else:
+        y_train = np.array(train.y, dtype=float)
 
     X_valid = np.array([preprocess(x, preproc) for x in valid.ids])
-    y_valid = np.array(valid.y, dtype=int)
+    if task_type == "classification":
+        y_valid = np.array(valid.y, dtype=int)
+    else:
+        y_valid = np.array(valid.y, dtype=float)
 
     X_test = np.array([preprocess(x, preproc) for x in test.ids])
-    y_test = np.array(test.y, dtype=int)
+    if task_type == "classification":
+        y_test = np.array(test.y, dtype=int)
+    else:
+        y_test = np.array(test.y, dtype=float)
 
     return tasks, X_train, y_train, X_valid, y_valid, X_test, y_test
 
@@ -192,15 +220,20 @@ def benchmark(configs: List[Dict[str, Any]]) -> None:
 
         if config["dataset"] in ["schneider"]:
             loader = schneider_loader
+        
+        if config["dataset"] in ["MOF"]:
+            loader = MOFLoader
 
         run_results = []
         for _ in range(config["n"]):
             tasks, X_train, y_train, X_valid, y_valid, X_test, y_test = loader(
                 config["dataset"],
+                task_type = config["task"],
                 splitter=config["splitter"],
                 preproc=config["preprocess"],
                 reload=False,
                 transformers=[],
+
             )
 
             if config["augment"] > 0:
@@ -259,17 +292,9 @@ def benchmark(configs: List[Dict[str, Any]]) -> None:
 
                 run_results.append([valid_auroc, valid_f1, test_auroc, test_f1])
             else:
-                if config["task"] == "regression_knn":
-                    
-                    valid_preds = regress(X_train, y_train, X_valid, config["k"])
-                    test_preds = regress(X_train, y_train, X_test, config["k"])
 
-                elif config["task"] == "regression_kernel_ridge":
-                    best_alpha, best_gamma, best_lambda_, best_score = cross_val_and_fit_kernel_ridge(X_train, y_train, config["k"], config["gammas"], config["lambdas"])
-                    valid_preds = predict_kernel_ridge_regression(X_train, X_valid, best_alpha, best_gamma)
-                    test_preds = predict_kernel_ridge_regression(X_train, X_test, best_alpha, best_gamma)
-                else:
-                    raise ValueError(f"Unknown task {config['task']}")
+                valid_preds = regress(X_train, y_train, X_valid, config["k"])
+                test_preds = regress(X_train, y_train, X_test, config["k"])
 
                 # Compute metrics
                 valid_rmse = mean_squared_error(y_valid, valid_preds, squared=False)
@@ -467,17 +492,30 @@ def main():
             #     "is_imbalanced": True,
             #     "n": 4,
             # },
+            # {
+            #     "dataset": "schneider",
+            #     "splitter": "random",
+            #     "task": "classification",
+            #     "k": 5,
+            #     "augment": 0,
+            #     "preprocess": True,
+            #     "sub_sample": 0.0,
+            #     "is_imbalanced": False,
+            #     "n": 1,
+            # },
+
             {
-                "dataset": "schneider",
+                "dataset": "MOF",
                 "splitter": "random",
-                "task": "classification",
-                "k": 5,
+                "task": "regression",
+                "k": 25,
                 "augment": 0,
                 "preprocess": True,
                 "sub_sample": 0.0,
                 "is_imbalanced": False,
-                "n": 1,
+                "n": 3,
             },
+
         ]
     )
 
