@@ -23,10 +23,10 @@ from pytablewriter import MarkdownTableWriter
 from rdkit.Chem.AllChem import MolFromSmiles, MolToSmiles, MolToInchi
 from rdkit import rdBase
 
-blocker = rdBase.BlockLogs()
+#blocker = rdBase.BlockLogs()
 
 from gzip_classifier import classify
-from gzip_regressor import regress
+from gzip_regressor import regress, cross_val_and_fit_kernel_ridge,predict_kernel_ridge_regression
 from smiles_tokenizer import tokenize
 
 enc = MHFPEncoder()
@@ -259,8 +259,17 @@ def benchmark(configs: List[Dict[str, Any]]) -> None:
 
                 run_results.append([valid_auroc, valid_f1, test_auroc, test_f1])
             else:
-                valid_preds = regress(X_train, y_train, X_valid, config["k"])
-                test_preds = regress(X_train, y_train, X_test, config["k"])
+                if config["task"] == "regression_knn":
+                    
+                    valid_preds = regress(X_train, y_train, X_valid, config["k"])
+                    test_preds = regress(X_train, y_train, X_test, config["k"])
+
+                elif config["task"] == "regression_kernel_ridge":
+                    best_alpha, best_gamma, best_lambda_, best_score = cross_val_and_fit_kernel_ridge(X_train, y_train, config["k"], config["gammas"], config["lambdas"])
+                    valid_preds = predict_kernel_ridge_regression(X_train, X_valid, best_alpha, best_gamma)
+                    test_preds = predict_kernel_ridge_regression(X_train, X_test, best_alpha, best_gamma)
+                else:
+                    raise ValueError(f"Unknown task {config['task']}")
 
                 # Compute metrics
                 valid_rmse = mean_squared_error(y_valid, valid_preds, squared=False)

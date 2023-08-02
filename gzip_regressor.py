@@ -7,7 +7,8 @@ import numpy as np
 from tqdm import tqdm
 from scipy.linalg import solve
 from sklearn.metrics.pairwise import pairwise_distances
-
+from sklearn.model_selection import KFold
+from sklearn.metrics import mean_squared_error
 
 def regress_(x1, X_train, y_train, k):
     Cx1 = len(gzip.compress(x1.encode()))
@@ -93,3 +94,63 @@ def predict_kernel_ridge_regression(X_train, X_test, alpha, gamma):
     y_pred = K_test.dot(alpha)
 
     return y_pred
+
+
+def cross_val_and_fit_kernel_ridge(X, y, k, gammas, lambdas):
+    """
+    Perform k-fold cross validation to find the best gamma and lambda for kernel ridge regression, 
+    and then fit the model to the entire dataset using these hyperparameters.
+    
+    Parameters:
+    X : array-like of shape (n_samples, n_features)
+        The input samples. 
+    y : array-like of shape (n_samples,) or (n_samples, n_outputs)
+        The target values.
+    k : int
+        The number of folds in the cross-validation.
+    gammas : array-like
+        The gamma values to try. Gamma is the inverse of the standard deviation of 
+        the RBF kernel (used as similarity measure between samples).
+    lambdas : array-like
+        The lambda values to try. Lambda is the regularization parameter.
+    
+    Returns:
+    best_alpha : array-like of shape (n_samples,) or (n_samples, n_outputs)
+        The fitted weights for the kernel ridge regression model.
+    best_gamma : float
+        The best gamma value found in the cross-validation.
+    best_lambda_ : float
+        The best lambda value found in the cross-validation.
+    best_score : float
+        The mean squared error of the model with the best gamma and lambda.
+    """
+    kf = KFold(n_splits=k)
+    
+    best_gamma, best_lambda_ = None, None
+    best_score = float('inf')
+    
+    for gamma in gammas:
+        for lambda_ in lambdas:
+            mse_scores = []
+            
+            for train_idx, val_idx in kf.split(X):
+                X_train, X_val = X[train_idx], X[val_idx]
+                y_train, y_val = y[train_idx], y[val_idx]
+                
+                alpha  = train_kernel_ridge_regression(X_train, y_train, gamma, lambda_)
+                y_pred = predict_kernel_ridge_regression(X_train, X_val, alpha, gamma)
+                
+                mse = mean_squared_error(y_val, y_pred)
+                mse_scores.append(mse)
+            
+            avg_mse = np.mean(mse_scores)
+            
+            if avg_mse < best_score:
+                best_score = avg_mse
+                best_gamma = gamma
+                best_lambda_ = lambda_
+
+    # Perform one final fit on all the data using the best hyperparameters
+    best_alpha = train_kernel_ridge_regression(X, y, best_gamma, best_lambda_)
+
+    return best_alpha, best_gamma, best_lambda_, best_score
