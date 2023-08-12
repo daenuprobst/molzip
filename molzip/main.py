@@ -320,6 +320,7 @@ def benchmark(configs: List[Dict[str, Any]]) -> None:
 
 
 def main():
+    
     benchmark(
         [
              {
