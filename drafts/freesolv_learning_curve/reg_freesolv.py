@@ -12,6 +12,9 @@ import os
 from smiles_tokenizer import tokenize
 import selfies as sf
 from sklearn.metrics import mean_squared_error,mean_absolute_error
+import random
+import pdb
+random.seed(42)
 
 
 def bin_vectors(X, num_bins):
@@ -109,9 +112,11 @@ def molnet_loader(type_preproc,
 
 
 if __name__ == "__main__":
+
     configs = [
-{
+    {
         "dataset": "freesolv",
+        "label" : "SMILES",
         "splitter": "random",
         "task": "regression_knn",
         "k": 25,
@@ -120,12 +125,13 @@ if __name__ == "__main__":
         "type_preproc": "default",
         "sub_sample": 0.0,
         "is_imbalanced": False,
-        "n": 4,
+        "n": 10,
         "bins": 70,
         "smilesANDvec": False
     },        
     {
         "dataset": "freesolv",
+        "label" : "SMILES & Vector",
         "splitter": "random",
         "task": "regression_knn",
         "k": 25,
@@ -134,7 +140,67 @@ if __name__ == "__main__":
         "type_preproc": "default",
         "sub_sample": 0.0,
         "is_imbalanced": False,
-        "n": 4,
+        "n": 10,
+        "bins": 70,
+        "smilesANDvec": True
+    },
+    #{
+    #    "dataset": "freesolv",
+    #    "label" : "token. SMILES",
+    #    "splitter": "random",
+    #    "task": "regression_knn",
+    #    "k": 25,
+    #    "augment": 0,
+    #    "preprocess": True,
+    #    "type_preproc": "tok_smiles",
+    #    "sub_sample": 0.0,
+    #    "is_imbalanced": False,
+    #    "n": 10,
+    #    "bins": 70,
+    #    "smilesANDvec": False
+    #},        
+    #{
+    #    "dataset": "freesolv",
+    #    "label" : "token. SMILES & Vector",
+    #    "splitter": "random",
+    #    "task": "regression_knn",
+    #    "k": 25,
+    #    "augment": 0,
+    #    "preprocess": True,
+    #    "type_preproc": "tok_smiles",
+    #    "sub_sample": 0.0,
+    #    "is_imbalanced": False,
+    #    "n": 10,
+    #    "bins": 70,
+    #    "smilesANDvec": True
+    #},
+    {
+        "dataset": "freesolv",
+        "label" : "SELFIES",
+        "splitter": "random",
+        "task": "regression_knn",
+        "k": 25,
+        "augment": 0,
+        "preprocess": True,
+        "type_preproc": "selfies",
+        "sub_sample": 0.0,
+        "is_imbalanced": False,
+        "n": 10,
+        "bins": 70,
+        "smilesANDvec": False
+    },        
+    {
+        "dataset": "freesolv",
+        "label" : "SELFIES & Vector",
+        "splitter": "random",
+        "task": "regression_knn",
+        "k": 25,
+        "augment": 0,
+        "preprocess": True,
+        "type_preproc": "selfies",
+        "sub_sample": 0.0,
+        "is_imbalanced": False,
+        "n": 10,
         "bins": 70,
         "smilesANDvec": True
     },
@@ -171,15 +237,17 @@ if __name__ == "__main__":
         #"smilesANDvec": True
         #}
     ]
-    #N = [100, 200, 300, 400, 512]
+
+    N = [2**i for i in range(4, 10)]
     
     results = []
+    all_learning_curves = []
 
     for config in configs:
         run_results = []
+        run_learning_curve = []
         for _ in range(config["n"]):
             
-
             tasks,SMILES_train,SMILES_valid,SMILES_test, X_train, y_train, X_valid, y_valid, X_test, y_test = molnet_loader(config["type_preproc"],
                 config["dataset"],
                 splitter=config["splitter"],
@@ -198,13 +266,24 @@ if __name__ == "__main__":
                 featurizer_rdkit = dc.feat.RDKitDescriptors(is_normalized=True)
                 vectors_test  = bin_vectors(featurizer_rdkit.featurize(SMILES_test), config["bins"])
 
-                X_train = np.array([np.array(s+x) for s,x in zip(SMILES_train,vectors_train)])
-                X_valid = np.array([np.array(s+x) for s,x in zip(SMILES_valid,vectors_valid)])
-                X_test = np.array([np.array(s+x) for s,x in zip(SMILES_test,vectors_test)])
+                #X_train = np.array([np.array(s+x) for s,x in zip(SMILES_train,vectors_train)])
+                #X_valid = np.array([np.array(s+x) for s,x in zip(SMILES_valid,vectors_valid)])
+                #X_test = np.array([np.array(s+x) for s,x in zip(SMILES_test,vectors_test)])
+                X_train = np.array([np.array(s+x) for s,x in zip(X_train,vectors_train)])
+                X_valid = np.array([np.array(s+x) for s,x in zip(X_valid,vectors_valid)])
+                X_test = np.array([np.array(s+x) for s,x in zip(X_test,vectors_test)])
 
+            
+            curr_lrn_curve = []
             if config["task"] == "regression_knn":
-                valid_preds = regress(X_train, y_train, X_valid, config["k"])
-                test_preds = regress(X_train, y_train, X_test, config["k"])
+                for n in N:
+                    valid_preds = regress(X_train, y_train, X_valid, config["k"])
+                    test_preds = regress(X_train[:n], y_train[:n], X_test, config["k"])
+                    test_mae = mean_absolute_error(y_test,test_preds)
+                    curr_lrn_curve.append(test_mae)
+
+
+
 
             elif config["task"] == "regression_krr":
                     best_alpha, best_gamma, best_lambda_, best_score = cross_val_and_fit_kernel_ridge(X_train, y_train, config["kfold"], config["gammas"], config["lambdas"])
@@ -214,19 +293,25 @@ if __name__ == "__main__":
             else:
                 raise ValueError(f"Unknown task {config['task']}")
 
+            
+            run_learning_curve.append(curr_lrn_curve)
+            
             # Compute metrics
             valid_rmse = mean_squared_error(y_valid, valid_preds, squared=False)
             valid_mae = mean_absolute_error(y_valid,valid_preds)
             test_rmse = mean_squared_error(y_test, test_preds, squared=False)
             test_mae = mean_absolute_error(y_test,test_preds)
             run_results.append([valid_rmse, valid_mae, test_rmse, test_mae])
+        #pdb.set_trace()
 
+        
+
+        all_learning_curves.append([np.mean(np.array(run_learning_curve), axis=0), np.std(np.array(run_learning_curve), axis=0)])
         run_results = np.array(run_results)
         results_means = np.mean(run_results, axis=0)
         results_stds = np.std(run_results, axis=0)
 
-        print(results_means)
-        print(results_stds)
+        print(config["label"] , results_means,results_stds)
 
 
         results.append(
@@ -240,3 +325,61 @@ if __name__ == "__main__":
                 },
             )
         )
+    all_learning_curves = np.array(all_learning_curves)
+
+
+    
+    fontsize = 20
+    # Plot learning curves
+    fig, ax = plt.subplots(figsize=(6, 8))
+
+
+    to_be_plotted = ["SMILES", "SMILES & Vector", "SELFIES", "SELFIES & Vector"]
+    for i, config in enumerate(configs):
+        curr_label = config["label"]
+        if curr_label not in to_be_plotted:
+            continue
+        else:
+            ax.plot(N, all_learning_curves[i][0], "-o", label=curr_label, linewidth=3)
+
+            ax.fill_between(N, all_learning_curves[i][0] - all_learning_curves[i][1], 
+                            all_learning_curves[i][0] + all_learning_curves[i][1], alpha=0.3)
+
+        
+    # Set labels with increased font size
+    ax.set_xlabel(r"$N$", fontsize=fontsize)
+    ax.set_ylabel("MAE [kcal/mol]", fontsize=fontsize)
+    #ax.set_title("Learning Curves of Different Models", fontsize=fontsize+2)
+
+    # Set log scales
+    ax.set_xscale("log")
+    ax.set_yscale("log")
+
+    # Adjust ticks for better clarity in log scale
+    ax.get_xaxis().set_major_formatter(plt.ScalarFormatter())
+    ax.get_yaxis().set_major_formatter(plt.ScalarFormatter())
+
+    # Increase tick label font size
+    ax.tick_params(axis='both', which='major', labelsize=fontsize)
+    #add ticks at N 
+    ax.set_xticks(N)
+    ax.set_xticklabels(N)
+    ax.xaxis.set_minor_formatter(plt.NullFormatter())
+    #set y ticks
+    yticks = [0.3, 0.4, 0.6, 0.8]
+    ax.set_yticks(yticks)
+    ax.set_yticklabels(yticks)
+    # Add grid
+    ax.grid(True, which="both", ls="--", linewidth=0.5, axis='y')  # Only show y-axis grid
+    ax.grid(True, which="major", ls="--", linewidth=0.5, axis='x')  # Only show x-axis major grid
+
+    # Adjust legend properties
+    ax.legend(fontsize=fontsize-4, loc='lower left')
+
+    # Adjust layout
+    fig.tight_layout()
+
+    # Save figure
+    fig.savefig("learning_curves.png", dpi=300)
+    #save also as pdf
+    fig.savefig("learning_curves.pdf", dpi=300)
