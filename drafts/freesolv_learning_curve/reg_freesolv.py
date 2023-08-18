@@ -13,6 +13,7 @@ from smiles_tokenizer import tokenize
 import selfies as sf
 from sklearn.metrics import mean_squared_error,mean_absolute_error
 import random
+from timeit import default_timer as timer
 import pdb
 random.seed(42)
 
@@ -265,10 +266,7 @@ if __name__ == "__main__":
                 featurizer_rdkit = 0
                 featurizer_rdkit = dc.feat.RDKitDescriptors(is_normalized=True)
                 vectors_test  = bin_vectors(featurizer_rdkit.featurize(SMILES_test), config["bins"])
-
-                #X_train = np.array([np.array(s+x) for s,x in zip(SMILES_train,vectors_train)])
-                #X_valid = np.array([np.array(s+x) for s,x in zip(SMILES_valid,vectors_valid)])
-                #X_test = np.array([np.array(s+x) for s,x in zip(SMILES_test,vectors_test)])
+                
                 X_train = np.array([np.array(s+x) for s,x in zip(X_train,vectors_train)])
                 X_valid = np.array([np.array(s+x) for s,x in zip(X_valid,vectors_valid)])
                 X_test = np.array([np.array(s+x) for s,x in zip(X_test,vectors_test)])
@@ -278,9 +276,16 @@ if __name__ == "__main__":
             if config["task"] == "regression_knn":
                 for n in N:
                     valid_preds = regress(X_train, y_train, X_valid, config["k"])
+                    #timing for the prediction
+
+                    start = timer()
                     test_preds = regress(X_train[:n], y_train[:n], X_test, config["k"])
+                    end = timer()
+                    pdb.set_trace()
+                    print(f"{config['smilesANDvec']}, time : {end - start}")
                     test_mae = mean_absolute_error(y_test,test_preds)
                     curr_lrn_curve.append(test_mae)
+                    
 
 
 
