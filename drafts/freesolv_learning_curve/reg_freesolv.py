@@ -1,79 +1,18 @@
 import numpy as np
-from typing import Tuple, List
+from typing import Tuple
 import matplotlib.pyplot as plt
 from gzip_regressor import regress, cross_val_and_fit_kernel_ridge,predict_kernel_ridge_regression
 import matplotlib.pyplot as plt
 import numpy as np
-from xyz2mol import *
 import deepchem.molnet as mn
 import deepchem as dc
 import numpy as np
-import os
-from smiles_tokenizer import tokenize
 import selfies as sf
 from sklearn.metrics import mean_squared_error,mean_absolute_error
 import random
 from timeit import default_timer as timer
-import pdb
+from gzip_utils import bin_vectors, tokenize
 random.seed(42)
-
-
-def bin_vectors(X, num_bins):
-    """
-    Convert a 2D numpy array of vectors into a list of string representations based on binning.
-
-    Parameters:
-    - X (numpy.ndarray): A 2D array of shape (n_samples, n_features) to be binned.
-    - num_bins (int): The number of bins to be used for binning.
-
-    Returns:
-    - list: A list of string representations of the binned vectors.
-
-    Description:
-    The function first determines the global minimum and maximum values across all vectors.
-    It then creates separate bins for positive and negative values. Each value in the vectors
-    is then assigned to a bin and represented by a unique Unicode character. Negative values
-    are prefixed with a special '✖' character. The binned representations of the vectors are 
-    then returned as a list of strings.
-    """
-
-    # Create bins for positive and negative numbers separately
-    X_flattened = X.flatten()
-    pos_vector = X_flattened[X_flattened >= 0]
-    neg_vector = -X_flattened[X_flattened < 0]  # Flip sign for binning
-
-    pos_bins = np.linspace(0, max(pos_vector) if len(pos_vector) > 0 else 1, num_bins+1)
-    neg_bins = np.linspace(0, max(neg_vector) if len(neg_vector) > 0 else 1, num_bins+1)
-
-    # Create a mapping from bin number to Unicode character
-    bin_to_char = {i+1: chr(9786 + i) for i in range(num_bins)}
-
-    # Apply binning to each vector
-    string_reps = []
-    for vector in X:
-        # Digitize the vectors
-        pos_digitized = np.digitize(vector[vector >= 0], pos_bins)
-        neg_digitized = np.digitize(-vector[vector < 0], neg_bins)
-
-        # Convert digitized vectors to string representation
-        pos_string_rep = [bin_to_char.get(num, '?') for num in pos_digitized]
-        neg_string_rep = [f'✖{bin_to_char.get(num, "?")}' for num in neg_digitized]
-
-        # Combine the representations in the original order
-        string_rep = []
-        pos_index = 0
-        neg_index = 0
-        for num in vector:
-            if num >= 0:
-                string_rep.append(pos_string_rep[pos_index])
-                pos_index += 1
-            else:
-                string_rep.append(neg_string_rep[neg_index])
-                neg_index += 1
-
-        string_reps.append(''.join(string_rep))
-
-    return string_reps
 
 
 def preprocess(smiles: str, type_preproc: str, preproc: bool = False) -> str:
@@ -107,7 +46,7 @@ def molnet_loader(type_preproc,
 
     y_train = np.array(train.y, dtype=float)
     y_valid = np.array(valid.y, dtype=float)
-    y_test = np.array(test.y, dtype=float)
+    y_test  = np.array(test.y, dtype=float)
 
     return tasks,SMILES_train,SMILES_valid,SMILES_test, X_train, y_train, X_valid, y_valid, X_test, y_test
 
@@ -281,14 +220,9 @@ if __name__ == "__main__":
                     start = timer()
                     test_preds = regress(X_train[:n], y_train[:n], X_test, config["k"])
                     end = timer()
-                    pdb.set_trace()
                     print(f"{config['smilesANDvec']}, time : {end - start}")
                     test_mae = mean_absolute_error(y_test,test_preds)
                     curr_lrn_curve.append(test_mae)
-                    
-
-
-
 
             elif config["task"] == "regression_krr":
                     best_alpha, best_gamma, best_lambda_, best_score = cross_val_and_fit_kernel_ridge(X_train, y_train, config["kfold"], config["gammas"], config["lambdas"])
@@ -306,10 +240,7 @@ if __name__ == "__main__":
             valid_mae = mean_absolute_error(y_valid,valid_preds)
             test_rmse = mean_squared_error(y_test, test_preds, squared=False)
             test_mae = mean_absolute_error(y_test,test_preds)
-            run_results.append([valid_rmse, valid_mae, test_rmse, test_mae])
-        #pdb.set_trace()
-
-        
+            run_results.append([valid_rmse, valid_mae, test_rmse, test_mae])        
 
         all_learning_curves.append([np.mean(np.array(run_learning_curve), axis=0), np.std(np.array(run_learning_curve), axis=0)])
         run_results = np.array(run_results)
@@ -375,8 +306,8 @@ if __name__ == "__main__":
     ax.set_yticks(yticks)
     ax.set_yticklabels(yticks)
     # Add grid
-    ax.grid(True, which="both", ls="--", linewidth=0.5, axis='y')  # Only show y-axis grid
-    ax.grid(True, which="major", ls="--", linewidth=0.5, axis='x')  # Only show x-axis major grid
+    ax.grid(True, which="both", ls="--", linewidth=0.5, axis='y')
+    ax.grid(True, which="major", ls="--", linewidth=0.5, axis='x')
 
     # Adjust legend properties
     ax.legend(fontsize=fontsize-4, loc='lower left')

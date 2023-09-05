@@ -1,12 +1,6 @@
-from typing import List, Dict, Any, Tuple
-from pathlib import Path
+
 import numpy as np
-import pandas as pd
-import deepchem.molnet as mn
-import selfies as sf
-import deepsmiles as ds
-from mhfp.encoder import MHFPEncoder
-import pdb
+import random
 from sklearn.metrics import (
     f1_score,
     roc_auc_score,
@@ -15,180 +9,11 @@ from sklearn.metrics import (
     accuracy_score,
 )
 from sklearn.utils.class_weight import compute_class_weight
-from sklearn.model_selection import train_test_split
-
-from pytablewriter import MarkdownTableWriter
-
-from rdkit.Chem.AllChem import MolFromSmiles, MolToSmiles, MolToInchi
-from rdkit import rdBase
-
-#blocker = rdBase.BlockLogs()
-
 from gzip_classifier import classify
 from gzip_regressor import regress, cross_val_and_fit_kernel_ridge,predict_kernel_ridge_regression
-from smiles_tokenizer import tokenize
+from gzip_utils import *
 
-enc = MHFPEncoder()
-
-
-def to_secfp(
-    smiles: str,
-    radius: int = 3,
-    rings: bool = True,
-    kekulize: bool = True,
-    min_radius: int = 1,
-) -> str:
-    return " ".join(
-        [
-            str(s)
-            for s in MHFPEncoder.shingling_from_mol(
-                MolFromSmiles(smiles), radius, rings, kekulize, min_radius
-            )
-        ]
-    )
-
-
-def write_table(results: List) -> None:
-    values = []
-
-    for config, result in results:
-        values.append(
-            [
-                config["dataset"],
-                config["splitter"],
-                result["valid_auroc"],
-                result["valid_f1"],
-                result["test_auroc"],
-                result["test_f1"],
-            ]
-        )
-
-    writer = MarkdownTableWriter(
-        table_name="Results Gzip-based Molecular Classification",
-        headers=[
-            "Data Set",
-            "Split",
-            "AUROC/RMSE (Valid)",
-            "F1/MAE (Valid)",
-            "AUROC/RMSE (Test)",
-            "F1/MAE (Test)",
-        ],
-        value_matrix=values,
-    )
-
-    with open("RESULTS.md", "w+") as f:
-        writer.stream = f
-        writer.write_table()
-
-
-def sub_sample(
-    X: np.array, Y: np.array, p: float = 0.5, seed=666
-) -> Tuple[np.array, np.array]:
-    X_sample, _, y_sample, _ = train_test_split(
-        X,
-        Y,
-        train_size=int(p * len(X)),
-        stratify=Y,
-        random_state=seed,
-    )
-
-    return X_sample, y_sample
-
-
-def augment(X: np.array, Y: np.array, n: int = 5) -> Tuple[np.array, np.array]:
-    X_aug = []
-    y_aug = []
-
-    for x, y in zip(X, Y):
-        mol = MolFromSmiles(x)
-        for _ in range(n):
-            x_rand = MolToSmiles(
-                mol,
-                canonical=False,
-                doRandom=True,
-                kekuleSmiles=True,
-                allBondsExplicit=True,
-                allHsExplicit=True,
-            )
-
-            X_aug.append(x_rand)
-            y_aug.append(y)
-
-    return np.array(X_aug), np.array(y_aug)
-
-
-def preprocess(smiles: str, preproc: bool = False) -> str:
-    if not preproc:
-        return smiles
-        # return to_secfp(smiles, min_radius=0)
-        # return sf.encoder(smiles, strict=False)
-        # return ds.Converter(rings=True, branches=True).encode(smiles)
-
-    smiles = MolToSmiles(
-        MolFromSmiles(smiles),
-        kekuleSmiles=True,
-        allBondsExplicit=True,
-        allHsExplicit=True,
-    )
-
-    return " ".join(tokenize(smiles))
-
-
-def molnet_loader(
-    name: str, preproc: bool = False, **kwargs
-) -> Tuple[str, np.array, np.array, np.array]:
-    mn_loader = getattr(mn, f"load_{name}")
-    dc_set = mn_loader(**kwargs)
-
-    tasks, dataset, _ = dc_set
-    train, valid, test = dataset
-    
-    X_train = np.array([preprocess(x, preproc) for x in train.ids])
-    X_valid = np.array([preprocess(x, preproc) for x in valid.ids])
-    X_test = np.array([preprocess(x, preproc) for x in test.ids])
-
-    if name == "freesolv" or name == "delaney" or name == "lipo":
-        # for regression tasks
-        y_train = np.array(train.y, dtype=float)
-        y_valid = np.array(valid.y, dtype=float)
-        y_test = np.array(test.y, dtype=float)
-        print("Task is regression!")
-    else:
-        # for classification tasks
-        y_train = np.array(train.y, dtype=int)
-        y_valid = np.array(valid.y, dtype=int)
-        y_test = np.array(test.y, dtype=int)
-        print("Task is classification!")
-
-    return tasks, X_train, y_train, X_valid, y_valid, X_test, y_test
-
-
-# Just use the same signature as for molnet_loader... it feels so wrong so it probably is pythonic
-def schneider_loader(
-    name: str, preproc: bool = False, **kwargs
-) -> Tuple[str, np.array, np.array, np.array]:
-    base_path = Path(__file__).resolve().parent
-    df = pd.read_csv(Path(base_path, "data/schneider50k.tsv.gz"), sep="\t")
-    X_train = np.array([row["rxn"] for _, row in df[df.split == "train"].iterrows()])
-    y_train = np.array(
-        [
-            [int(row["rxn_class"].split(".")[0])]
-            for _, row in df[df.split == "train"].iterrows()
-        ],
-        dtype=int,
-    )
-
-    X_test = np.array([row["rxn"] for _, row in df[df.split == "test"].iterrows()])
-    y_test = np.array(
-        [
-            [int(row["rxn_class"].split(".")[0])]
-            for _, row in df[df.split == "test"].iterrows()
-        ],
-        dtype=int,
-    )
-
-    # Just use test set as valid as no valid set is profided as is
-    return ["Reaction Class"], X_train, y_train, X_test, y_test, X_test, y_test
+random.seed(666)
 
 
 def benchmark(configs: List[Dict[str, Any]]) -> None:
@@ -334,19 +159,19 @@ def main():
                  "is_imbalanced": False,
                  "n": 4,
              },
-            {
-                 "dataset": "freesolv",
-                 "splitter": "random",
-                 "task": "regression_krr",
-                 "kfold": 5,
-                 "augment": 0,
-                 "gammas": np.logspace(-1, 3, 13),
-                 "lambdas": [1e-7, 1e-6, 1e-5],
-                 "preprocess": False,
-                 "sub_sample": 0.0,
-                 "is_imbalanced": False,
-                 "n": 4,
-             },
+             #{
+             #    "dataset": "freesolv",
+             #    "splitter": "random",
+             #    "task": "regression_krr",
+             #    "kfold": 5,
+             #    "augment": 0,
+             #    "gammas": np.logspace(-1, 3, 13),
+             #    "lambdas": [1e-7, 1e-6, 1e-5],
+             #    "preprocess": False,
+             #    "sub_sample": 0.0,
+             #    "is_imbalanced": False,
+             #    "n": 4,
+             #},
              {
                  "dataset": "delaney",
                  "splitter": "random",
