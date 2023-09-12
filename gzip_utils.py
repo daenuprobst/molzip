@@ -48,6 +48,202 @@ def augment(X: np.array, Y: np.array, n: int = 5) -> Tuple[np.array, np.array]:
 
 
 
+def combined_bin_vectors(X, num_bins):
+
+    """
+
+    Convert a 2D numpy array of vectors into a list of string representations based on variable length binning and delta encoding.
+
+    """
+
+    # Calculate the differences for each vector
+
+    X_diff = np.diff(X, axis=1)
+    # Create bins for positive and negative numbers separately
+    X_flattened = X_diff.flatten()
+    pos_vector = X_flattened[X_flattened >= 0]
+    neg_vector = -X_flattened[X_flattened < 0]  # Flip sign for binning
+
+    # Create variable bins
+    pos_bins = np.percentile(pos_vector, np.linspace(0, 100, num_bins + 1)) if len(pos_vector) > 0 else np.array([0, 1])
+    neg_bins = np.percentile(neg_vector, np.linspace(0, 100, num_bins + 1)) if len(neg_vector) > 0 else np.array([0, 1])
+
+    # Create a mapping from bin number to Unicode character
+    bin_to_char = {i+1: chr(9786 + i) for i in range(num_bins)}
+
+    # Apply binning to each vector difference
+
+    string_reps = []
+
+    for vector in X_diff:
+
+        # Digitize the vectors
+
+        pos_digitized = np.digitize(vector[vector >= 0], pos_bins)
+        neg_digitized = np.digitize(-vector[vector < 0], neg_bins)
+
+
+
+        # Convert digitized vectors to string representation
+        pos_string_rep = [bin_to_char.get(num, '?') for num in pos_digitized]
+        neg_string_rep = [f'✖{bin_to_char.get(num, "?")}' for num in neg_digitized]
+
+
+
+        # Combine the representations in the original order
+
+        string_rep = []
+        pos_index = 0
+        neg_index = 0
+
+        for num in vector:
+
+            if num >= 0:
+
+                string_rep.append(pos_string_rep[pos_index])
+                pos_index += 1
+            else:
+                string_rep.append(neg_string_rep[neg_index])
+                neg_index += 1
+
+        string_reps.append(''.join(string_rep))
+
+    return string_reps
+
+
+
+def delta_variable_bin_vectors(X, num_bins):
+
+    """
+
+    Convert a 2D numpy array of vectors into a list of string representations based on variable length binning and delta encoding.
+
+    """
+
+    # Calculate the differences for each vector
+
+    X_diff = np.diff(X, axis=1)
+
+    
+
+    # Create bins for positive and negative numbers separately
+
+    X_flattened = X_diff.flatten()
+    pos_vector = X_flattened[X_flattened >= 0]
+    neg_vector = -X_flattened[X_flattened < 0]  # Flip sign for binning
+
+
+
+    # Create variable bins
+    pos_bins = np.percentile(pos_vector, np.linspace(0, 100, num_bins + 1)) if len(pos_vector) > 0 else np.array([0, 1])
+    neg_bins = np.percentile(neg_vector, np.linspace(0, 100, num_bins + 1)) if len(neg_vector) > 0 else np.array([0, 1])
+
+
+
+    # Create a mapping from bin number to Unicode character
+    bin_to_char = {i+1: chr(9786 + i) for i in range(num_bins)}
+    # Apply binning to each vector difference
+    string_reps = []
+
+    for vector in X_diff:
+
+        # Digitize the vectors
+
+        pos_digitized = np.digitize(vector[vector >= 0], pos_bins)
+        neg_digitized = np.digitize(-vector[vector < 0], neg_bins)
+
+
+
+        # Convert digitized vectors to string representation
+
+        pos_string_rep = [bin_to_char.get(num, '?') for num in pos_digitized]
+        neg_string_rep = [f'✖{bin_to_char.get(num, "?")}' for num in neg_digitized]
+
+
+
+        # Combine the representations in the original order
+
+        string_rep = []
+        pos_index = 0
+        neg_index = 0
+
+        for num in vector:
+
+            if num >= 0:
+                string_rep.append(pos_string_rep[pos_index])
+                pos_index += 1
+
+            else:
+                string_rep.append(neg_string_rep[neg_index])
+                neg_index += 1
+
+        string_reps.append(''.join(string_rep))
+
+    return string_reps
+
+
+
+def variable_bin_vectors(X, num_bins):
+
+    """
+
+    Convert a 2D numpy array of vectors into a list of string representations based on variable length binning.
+
+    """
+
+    # Create bins for positive and negative numbers separately
+
+    X_flattened = X.flatten()
+    pos_vector = X_flattened[X_flattened >= 0]
+    neg_vector = -X_flattened[X_flattened < 0]  # Flip sign for binning
+    # Create variable bins
+    pos_bins = np.percentile(pos_vector, np.linspace(0, 100, num_bins + 1)) if len(pos_vector) > 0 else np.array([0, 1])
+    neg_bins = np.percentile(neg_vector, np.linspace(0, 100, num_bins + 1)) if len(neg_vector) > 0 else np.array([0, 1])
+
+    # Create a mapping from bin number to Unicode character
+    bin_to_char = {i+1: chr(9786 + i) for i in range(num_bins)}
+
+    # Apply binning to each vector
+    string_reps = []
+
+    for vector in X:
+
+        # Digitize the vectors
+
+        pos_digitized = np.digitize(vector[vector >= 0], pos_bins)
+        neg_digitized = np.digitize(-vector[vector < 0], neg_bins)
+
+
+
+        # Convert digitized vectors to string representation
+        pos_string_rep = [bin_to_char.get(num, '?') for num in pos_digitized]
+        neg_string_rep = [f'✖{bin_to_char.get(num, "?")}' for num in neg_digitized]
+
+
+
+        # Combine the representations in the original order
+        string_rep = []
+        pos_index = 0
+        neg_index = 0
+
+        for num in vector:
+
+            if num >= 0:
+
+                string_rep.append(pos_string_rep[pos_index])
+                pos_index += 1
+
+            else:
+
+                string_rep.append(neg_string_rep[neg_index])
+                neg_index += 1
+
+        string_reps.append(''.join(string_rep))
+    return string_reps
+
+
+
+
 def bin_vectors(X, num_bins):
     """
     Convert a 2D numpy array of vectors into a list of string representations based on binning.

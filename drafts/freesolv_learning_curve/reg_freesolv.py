@@ -114,36 +114,36 @@ if __name__ == "__main__":
     #    "bins": 70,
     #    "smilesANDvec": True
     #},
-    {
-        "dataset": "freesolv",
-        "label" : "SELFIES",
-        "splitter": "random",
-        "task": "regression_knn",
-        "k": 25,
-        "augment": 0,
-        "preprocess": True,
-        "type_preproc": "selfies",
-        "sub_sample": 0.0,
-        "is_imbalanced": False,
-        "n": 10,
-        "bins": 70,
-        "smilesANDvec": False
-    },        
-    {
-        "dataset": "freesolv",
-        "label" : "SELFIES & Vector",
-        "splitter": "random",
-        "task": "regression_knn",
-        "k": 25,
-        "augment": 0,
-        "preprocess": True,
-        "type_preproc": "selfies",
-        "sub_sample": 0.0,
-        "is_imbalanced": False,
-        "n": 10,
-        "bins": 70,
-        "smilesANDvec": True
-    },
+    #{
+    #    "dataset": "freesolv",
+    #    "label" : "SELFIES",
+    #    "splitter": "random",
+    #    "task": "regression_knn",
+    #    "k": 25,
+    #    "augment": 0,
+    #    "preprocess": True,
+    #    "type_preproc": "selfies",
+    #    "sub_sample": 0.0,
+    #    "is_imbalanced": False,
+    #    "n": 10,
+    #    "bins": 70,
+    #    "smilesANDvec": False
+    #},        
+    #{
+    #    "dataset": "freesolv",
+    #    "label" : "SELFIES & Vector",
+    #    "splitter": "random",
+    #    "task": "regression_knn",
+    #    "k": 25,
+    #    "augment": 0,
+    #    "preprocess": True,
+    #    "type_preproc": "selfies",
+    #    "sub_sample": 0.0,
+    #    "is_imbalanced": False,
+    #    "n": 10,
+    #    "bins": 70,
+    #    "smilesANDvec": True
+    #},
     #{
         #"dataset": "freesolv",
         #"splitter": "random",
@@ -283,8 +283,8 @@ if __name__ == "__main__":
 
         
     # Set labels with increased font size
-    ax.set_xlabel(r"$N$", fontsize=fontsize)
-    ax.set_ylabel("MAE [kcal/mol]", fontsize=fontsize)
+    ax.set_xlabel(r"$N$", fontsize=fontsize+3)
+    ax.set_title("MAE [kcal/mol]", fontsize=fontsize+3, loc='left', pad=20)
     #ax.set_title("Learning Curves of Different Models", fontsize=fontsize+2)
 
     # Set log scales
@@ -300,7 +300,7 @@ if __name__ == "__main__":
     #add ticks at N 
     ax.set_xticks(N)
     ax.set_xticklabels(N)
-    ax.xaxis.set_minor_formatter(plt.NullFormatter())
+    ax.tick_params(axis='both', which='minor', size=0)
     #set y ticks
     yticks = [0.3, 0.4, 0.6, 0.8]
     ax.set_yticks(yticks)
