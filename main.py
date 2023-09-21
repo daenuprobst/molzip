@@ -10,9 +10,9 @@ from sklearn.metrics import (
 )
 from sklearn.utils.class_weight import compute_class_weight
 from gzip_classifier import classify
-from gzip_regressor import regress, cross_val_and_fit_kernel_ridge,predict_kernel_ridge_regression
+from gzip_regressor import regress
 from gzip_utils import *
-
+from config import *
 random.seed(666)
 
 
@@ -91,20 +91,28 @@ def benchmark(configs: List[Dict[str, Any]]) -> None:
 
                 run_results.append([valid_auroc, valid_f1, test_auroc, test_f1])
             else:
-                if config["task"] == "regression_knn":
+                if config["task"] == "regression":
                     
                     valid_preds = regress(X_train, y_train, X_valid, config["k"])
                     test_preds = regress(X_train, y_train, X_test, config["k"])
+                
+                elif config["task"] == "regression_vec":
+                    X_train, nan_inds_train = get_smiles_vec_rep(X_train, config=config)
+                    X_valid, nan_inds_valid = get_smiles_vec_rep(X_valid, config=config)
+                    X_test,  nan_inds_test  = get_smiles_vec_rep(X_test, config=config)
+                    #Some features are nan (because rdkit failed to compute partial charges for some molecules)
+                    if len(nan_inds_train) > 0:
+                        y_train = np.delete(y_train, nan_inds_train).reshape(-1,1)
+                    if len(nan_inds_valid) > 0:
+                        y_valid = np.delete(y_valid, nan_inds_valid).reshape(-1,1)
+                    if len(nan_inds_test) > 0:
+                        y_test = np.delete(y_test, nan_inds_test).reshape(-1,1)
 
-                elif config["task"] == "regression_krr":
-                    best_alpha, best_gamma, best_lambda_, best_score = cross_val_and_fit_kernel_ridge(X_train, y_train, config["kfold"], config["gammas"], config["lambdas"])
-                    #print only best gamma and lambda
-                    print(f"Best gamma: {best_gamma}, Best lambda: {best_lambda_}")
-                    valid_preds = predict_kernel_ridge_regression(X_train, X_valid, best_alpha, best_gamma)
-                    test_preds = predict_kernel_ridge_regression(X_train, X_test, best_alpha, best_gamma)
+                    valid_preds = regress(X_train, y_train, X_valid, config["k"])
+                    test_preds  = regress(X_train, y_train, X_test, config["k"])
+                    
                 else:
                     raise ValueError(f"Unknown task {config['task']}")
-
                 # Compute metrics
                 valid_rmse = mean_squared_error(y_valid, valid_preds, squared=False)
                 valid_mae = mean_absolute_error(
@@ -145,190 +153,7 @@ def benchmark(configs: List[Dict[str, Any]]) -> None:
 
 
 def main():
-    
-    benchmark(
-        [
-             {
-                 "dataset": "freesolv",
-                 "splitter": "random",
-                 "task": "regression_knn",
-                 "k": 25,
-                 "augment": 0,
-                 "preprocess": False,
-                 "sub_sample": 0.0,
-                 "is_imbalanced": False,
-                 "n": 4,
-             },
-             #{
-             #    "dataset": "freesolv",
-             #    "splitter": "random",
-             #    "task": "regression_krr",
-             #    "kfold": 5,
-             #    "augment": 0,
-             #    "gammas": np.logspace(-1, 3, 13),
-             #    "lambdas": [1e-7, 1e-6, 1e-5],
-             #    "preprocess": False,
-             #    "sub_sample": 0.0,
-             #    "is_imbalanced": False,
-             #    "n": 4,
-             #},
-             {
-                 "dataset": "delaney",
-                 "splitter": "random",
-                 "task": "regression_knn",
-                 "k": 25,
-                 "augment": 0,
-                 "preprocess": False,
-                 "sub_sample": 0.0,
-                 "is_imbalanced": False,
-                 "n": 4,
-             },
-             {
-                 "dataset": "lipo",
-                 "splitter": "random",
-                 "task": "regression_knn",
-                 "k": 25,
-                 "augment": 0,
-                 "preprocess": False,
-                 "sub_sample": 0.0,
-                 "is_imbalanced": False,
-                 "n": 4,
-             },
-             {
-                 "dataset": "sider",
-                 "splitter": "scaffold",
-                 "task": "classification",
-                 "k": 5,
-                 "augment": 0,
-                 "preprocess": False,
-                 "sub_sample": 0.0,
-                 "is_imbalanced": True,
-                 "n": 1,
-             },
-             {
-                 "dataset": "sider",
-                 "splitter": "random",
-                 "task": "classification",
-                 "k": 5,
-                 "augment": 0,
-                 "preprocess": False,
-                 "sub_sample": 0.0,
-                 "is_imbalanced": True,
-                 "n": 4,
-             },
-             {
-                 "dataset": "bbbp",
-                 "splitter": "scaffold",
-                 "task": "classification",
-                 "k": 5,
-                 "augment": 0,
-                 "preprocess": False,
-                 "sub_sample": 0.0,
-                 "is_imbalanced": True,
-                 "n": 1,
-             },
-             {
-                 "dataset": "bace_classification",
-                 "splitter": "scaffold",
-                 "task": "classification",
-                 "k": 5,
-                 "augment": 0,
-                 "preprocess": False,
-                 "sub_sample": 0.0,
-                 "is_imbalanced": True,
-                 "n": 1,
-             },
-             {
-                 "dataset": "bace_classification",
-                 "splitter": "random",
-                 "task": "classification",
-                 "k": 5,
-                 "augment": 0,
-                 "preprocess": False,
-                 "sub_sample": 0.0,
-                 "is_imbalanced": True,
-                 "n": 4,
-             },
-             {
-                 "dataset": "clintox",
-                 "splitter": "scaffold",
-                 "task": "classification",
-                 "k": 5,
-                 "augment": 0,
-                 "preprocess": False,
-                 "sub_sample": 0.0,
-                 "is_imbalanced": True,
-                 "n": 1,
-             },
-             {
-                 "dataset": "clintox",
-                 "splitter": "random",
-                 "task": "classification",
-                 "k": 5,
-                 "augment": 0,
-                 "preprocess": False,
-                 "sub_sample": 0.0,
-                 "is_imbalanced": True,
-                 "n": 4,
-             },
-             {
-                 "dataset": "tox21",
-                 "splitter": "scaffold",
-                 "task": "classification",
-                 "k": 5,
-                 "augment": 0,
-                 "preprocess": False,
-                 "sub_sample": 0.0,
-                 "is_imbalanced": True,
-                 "n": 1,
-             },
-             {
-                 "dataset": "tox21",
-                 "splitter": "random",
-                 "task": "classification",
-                 "k": 5,
-                 "augment": 0,
-                 "preprocess": False,
-                 "sub_sample": 0.0,
-                 "is_imbalanced": True,
-                 "n": 4,
-             },
-             {
-                 "dataset": "hiv",
-                 "splitter": "scaffold",
-                 "task": "classification",
-                 "k": 5,
-                 "augment": 0,
-                 "preprocess": False,
-                 "sub_sample": 0.0,
-                 "is_imbalanced": True,
-                 "n": 1,
-             },
-             {
-                 "dataset": "muv",
-                 "splitter": "random",
-                 "task": "classification",
-                 "k": 5,
-                 "augment": 0,
-                 "preprocess": False,
-                 "sub_sample": 0.0,
-                 "is_imbalanced": True,
-                 "n": 4,
-             },
-            {
-               "dataset": "schneider",
-               "splitter": "random",
-                "task": "classification",
-                "k": 5,
-                "augment": 0,
-                "preprocess": True,
-                "sub_sample": 0.0,
-                "is_imbalanced": False,
-                "n": 1,
-            },
-        ]
-    )
-
+    benchmark(all_tests)
 
 if __name__ == "__main__":
     main()

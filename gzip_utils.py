@@ -9,6 +9,7 @@ import selfies as sf
 import deepsmiles as ds
 import deepchem.molnet as mn
 import pandas as pd
+import deepchem as dc
 from pathlib import Path
 
 def sub_sample(
@@ -47,6 +48,19 @@ def augment(X: np.array, Y: np.array, n: int = 5) -> Tuple[np.array, np.array]:
     return np.array(X_aug), np.array(y_aug)
 
 
+def get_smiles_vec_rep(SMILES, config):
+    featurizer_rdkit = 0
+    featurizer_rdkit = dc.feat.RDKitDescriptors(is_normalized=True)
+    
+    feature_vectors = featurizer_rdkit.featurize(SMILES)
+    indices_with_nan = [i for i, subarray in enumerate(feature_vectors) if np.isnan(subarray).any()]
+    if len(indices_with_nan) > 0:
+        feature_vectors = np.array([subarray for subarray in feature_vectors if not np.isnan(subarray).any()])
+        vectors = bin_vectors(feature_vectors, config["bins"])
+    else:
+        vectors = bin_vectors(feature_vectors, config["bins"])
+
+    return np.array([np.array(s+x) for s,x in zip(SMILES,vectors)]), indices_with_nan
 
 def combined_bin_vectors(X, num_bins):
 
@@ -329,6 +343,7 @@ def write_table(results: List) -> None:
         values.append(
             [
                 config["dataset"],
+                config["task"],
                 config["splitter"],
                 result["valid_auroc"],
                 result["valid_f1"],
@@ -341,6 +356,7 @@ def write_table(results: List) -> None:
         table_name="Results Gzip-based Molecular Classification",
         headers=[
             "Data Set",
+            "Task",
             "Split",
             "AUROC/RMSE (Valid)",
             "F1/MAE (Valid)",
@@ -396,7 +412,7 @@ def molnet_loader(
     X_valid = np.array([preprocess(x, preproc) for x in valid.ids])
     X_test = np.array([preprocess(x, preproc) for x in test.ids])
 
-    if name == "freesolv" or name == "delaney" or name == "lipo":
+    if name == "freesolv" or name == "delaney" or name == "lipo" or name == "sampl":
         # for regression tasks
         y_train = np.array(train.y, dtype=float)
         y_valid = np.array(valid.y, dtype=float)
