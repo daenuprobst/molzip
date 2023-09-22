@@ -438,3 +438,30 @@ def schneider_loader(
 
     # Just use test set as valid as no valid set is profided as is
     return ["Reaction Class"], X_train, y_train, X_test, y_test, X_test, y_test
+
+def adme_loader(name: str, preproc: bool = False, **kwargs):
+    _, task_name = name.split("-")
+    print(task_name)
+
+    base_path = Path(__file__).resolve().parent
+    adme_train_file = Path(base_path, f"data/adme/ADME_{task_name}_train.csv")
+    adme_test_file = Path(base_path, f"data/adme/ADME_{task_name}_test.csv")
+
+    train = pd.read_csv(adme_train_file)
+    test = pd.read_csv(adme_test_file)
+
+    # Validation samples are not needed 
+    valid = train.sample(frac=0.1)
+
+
+    X_train = np.array([preprocess(x, preproc) for x in train["smiles"]])
+    X_valid = np.array([preprocess(x, preproc) for x in valid["smiles"]])
+    X_test = np.array([preprocess(x, preproc) for x in test["smiles"]])
+
+    y_train = np.expand_dims(np.array(train["activity"], dtype=float), axis=1)
+    y_valid = np.expand_dims(np.array(valid["activity"], dtype=float), axis=1)
+    y_test = np.expand_dims(np.array(test["activity"], dtype=float), axis=1)
+
+    tasks = ["activity"]
+
+    return tasks, X_train, y_train, X_valid, y_valid, X_test, y_test

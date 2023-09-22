@@ -1,12 +1,12 @@
 
 import numpy as np
 import random
+from scipy.stats import pearsonr
 from sklearn.metrics import (
     f1_score,
     roc_auc_score,
     mean_squared_error,
     mean_absolute_error,
-    accuracy_score,
 )
 from sklearn.utils.class_weight import compute_class_weight
 from gzip_classifier import classify
@@ -24,6 +24,9 @@ def benchmark(configs: List[Dict[str, Any]]) -> None:
 
         if config["dataset"] in ["schneider"]:
             loader = schneider_loader
+
+        if config["dataset"].startswith("adme"):
+            loader = adme_loader
 
         run_results = []
         for _ in range(config["n"]):
@@ -106,21 +109,26 @@ def benchmark(configs: List[Dict[str, Any]]) -> None:
                     raise ValueError(f"Unknown task {config['task']}")
 
                 # Compute metrics
+                valid_r = pearsonr(y_valid.flatten(), valid_preds.flatten())
                 valid_rmse = mean_squared_error(y_valid, valid_preds, squared=False)
                 valid_mae = mean_absolute_error(
                     y_valid,
                     valid_preds,
                 )
+
+                test_r = pearsonr(y_test.flatten(), test_preds.flatten())
                 test_rmse = mean_squared_error(y_test, test_preds, squared=False)
                 test_mae = mean_absolute_error(
                     y_test,
-                    test_preds,
+                    test_preds
                 )
+
+
 
                 print(f"\n{config['dataset']} ({len(tasks)} tasks)")
                 print(config)
                 print(
-                    f"Valid RMSE: {valid_rmse}, Valid MAE: {valid_mae} , Test RMSE: {test_rmse}, Test MAE: {test_mae}"
+                    f"Valid R: {valid_r[0]}, Valid RMSE: {valid_rmse}, Valid MAE: {valid_mae}, Test R: {test_r[0]}, Test RMSE: {test_rmse}, Test MAE: {test_mae}"
                 )
 
                 run_results.append([valid_rmse, valid_mae, test_rmse, test_mae])
@@ -145,189 +153,201 @@ def benchmark(configs: List[Dict[str, Any]]) -> None:
 
 
 def main():
+
+    benchmark([
+        {
+            "dataset": "adme-HLM",
+            "splitter": "random",
+            "task": "regression_knn",
+            "k": 25,
+            "augment": 0,
+            "preprocess": False,
+            "sub_sample": 0.0,
+            "is_imbalanced": False,
+            "n": 4,
+        },
+        # {
+        #     "dataset": "freesolv",
+        #     "splitter": "random",
+        #     "task": "regression_knn",
+        #     "k": 25,
+        #     "augment": 0,
+        #     "preprocess": False,
+        #     "sub_sample": 0.0,
+        #     "is_imbalanced": False,
+        #     "n": 4,
+        # },
+    ])
     
-    benchmark(
-        [
-             {
-                 "dataset": "freesolv",
-                 "splitter": "random",
-                 "task": "regression_knn",
-                 "k": 25,
-                 "augment": 0,
-                 "preprocess": False,
-                 "sub_sample": 0.0,
-                 "is_imbalanced": False,
-                 "n": 4,
-             },
-             #{
-             #    "dataset": "freesolv",
-             #    "splitter": "random",
-             #    "task": "regression_krr",
-             #    "kfold": 5,
-             #    "augment": 0,
-             #    "gammas": np.logspace(-1, 3, 13),
-             #    "lambdas": [1e-7, 1e-6, 1e-5],
-             #    "preprocess": False,
-             #    "sub_sample": 0.0,
-             #    "is_imbalanced": False,
-             #    "n": 4,
-             #},
-             {
-                 "dataset": "delaney",
-                 "splitter": "random",
-                 "task": "regression_knn",
-                 "k": 25,
-                 "augment": 0,
-                 "preprocess": False,
-                 "sub_sample": 0.0,
-                 "is_imbalanced": False,
-                 "n": 4,
-             },
-             {
-                 "dataset": "lipo",
-                 "splitter": "random",
-                 "task": "regression_knn",
-                 "k": 25,
-                 "augment": 0,
-                 "preprocess": False,
-                 "sub_sample": 0.0,
-                 "is_imbalanced": False,
-                 "n": 4,
-             },
-             {
-                 "dataset": "sider",
-                 "splitter": "scaffold",
-                 "task": "classification",
-                 "k": 5,
-                 "augment": 0,
-                 "preprocess": False,
-                 "sub_sample": 0.0,
-                 "is_imbalanced": True,
-                 "n": 1,
-             },
-             {
-                 "dataset": "sider",
-                 "splitter": "random",
-                 "task": "classification",
-                 "k": 5,
-                 "augment": 0,
-                 "preprocess": False,
-                 "sub_sample": 0.0,
-                 "is_imbalanced": True,
-                 "n": 4,
-             },
-             {
-                 "dataset": "bbbp",
-                 "splitter": "scaffold",
-                 "task": "classification",
-                 "k": 5,
-                 "augment": 0,
-                 "preprocess": False,
-                 "sub_sample": 0.0,
-                 "is_imbalanced": True,
-                 "n": 1,
-             },
-             {
-                 "dataset": "bace_classification",
-                 "splitter": "scaffold",
-                 "task": "classification",
-                 "k": 5,
-                 "augment": 0,
-                 "preprocess": False,
-                 "sub_sample": 0.0,
-                 "is_imbalanced": True,
-                 "n": 1,
-             },
-             {
-                 "dataset": "bace_classification",
-                 "splitter": "random",
-                 "task": "classification",
-                 "k": 5,
-                 "augment": 0,
-                 "preprocess": False,
-                 "sub_sample": 0.0,
-                 "is_imbalanced": True,
-                 "n": 4,
-             },
-             {
-                 "dataset": "clintox",
-                 "splitter": "scaffold",
-                 "task": "classification",
-                 "k": 5,
-                 "augment": 0,
-                 "preprocess": False,
-                 "sub_sample": 0.0,
-                 "is_imbalanced": True,
-                 "n": 1,
-             },
-             {
-                 "dataset": "clintox",
-                 "splitter": "random",
-                 "task": "classification",
-                 "k": 5,
-                 "augment": 0,
-                 "preprocess": False,
-                 "sub_sample": 0.0,
-                 "is_imbalanced": True,
-                 "n": 4,
-             },
-             {
-                 "dataset": "tox21",
-                 "splitter": "scaffold",
-                 "task": "classification",
-                 "k": 5,
-                 "augment": 0,
-                 "preprocess": False,
-                 "sub_sample": 0.0,
-                 "is_imbalanced": True,
-                 "n": 1,
-             },
-             {
-                 "dataset": "tox21",
-                 "splitter": "random",
-                 "task": "classification",
-                 "k": 5,
-                 "augment": 0,
-                 "preprocess": False,
-                 "sub_sample": 0.0,
-                 "is_imbalanced": True,
-                 "n": 4,
-             },
-             {
-                 "dataset": "hiv",
-                 "splitter": "scaffold",
-                 "task": "classification",
-                 "k": 5,
-                 "augment": 0,
-                 "preprocess": False,
-                 "sub_sample": 0.0,
-                 "is_imbalanced": True,
-                 "n": 1,
-             },
-             {
-                 "dataset": "muv",
-                 "splitter": "random",
-                 "task": "classification",
-                 "k": 5,
-                 "augment": 0,
-                 "preprocess": False,
-                 "sub_sample": 0.0,
-                 "is_imbalanced": True,
-                 "n": 4,
-             },
-            {
-               "dataset": "schneider",
-               "splitter": "random",
-                "task": "classification",
-                "k": 5,
-                "augment": 0,
-                "preprocess": True,
-                "sub_sample": 0.0,
-                "is_imbalanced": False,
-                "n": 1,
-            },
-        ]
-    )
+    # benchmark(
+    #     [
+    #          {
+    #              "dataset": "freesolv",
+    #              "splitter": "random",
+    #              "task": "regression_knn",
+    #              "k": 25,
+    #              "augment": 0,
+    #              "preprocess": False,
+    #              "sub_sample": 0.0,
+    #              "is_imbalanced": False,
+    #              "n": 4,
+    #          },
+    #          {
+    #              "dataset": "delaney",
+    #              "splitter": "random",
+    #              "task": "regression_knn",
+    #              "k": 25,
+    #              "augment": 0,
+    #              "preprocess": False,
+    #              "sub_sample": 0.0,
+    #              "is_imbalanced": False,
+    #              "n": 4,
+    #          },
+    #          {
+    #              "dataset": "lipo",
+    #              "splitter": "random",
+    #              "task": "regression_knn",
+    #              "k": 25,
+    #              "augment": 0,
+    #              "preprocess": False,
+    #              "sub_sample": 0.0,
+    #              "is_imbalanced": False,
+    #              "n": 4,
+    #          },
+    #          {
+    #              "dataset": "sider",
+    #              "splitter": "scaffold",
+    #              "task": "classification",
+    #              "k": 5,
+    #              "augment": 0,
+    #              "preprocess": False,
+    #              "sub_sample": 0.0,
+    #              "is_imbalanced": True,
+    #              "n": 1,
+    #          },
+    #          {
+    #              "dataset": "sider",
+    #              "splitter": "random",
+    #              "task": "classification",
+    #              "k": 5,
+    #              "augment": 0,
+    #              "preprocess": False,
+    #              "sub_sample": 0.0,
+    #              "is_imbalanced": True,
+    #              "n": 4,
+    #          },
+    #          {
+    #              "dataset": "bbbp",
+    #              "splitter": "scaffold",
+    #              "task": "classification",
+    #              "k": 5,
+    #              "augment": 0,
+    #              "preprocess": False,
+    #              "sub_sample": 0.0,
+    #              "is_imbalanced": True,
+    #              "n": 1,
+    #          },
+    #          {
+    #              "dataset": "bace_classification",
+    #              "splitter": "scaffold",
+    #              "task": "classification",
+    #              "k": 5,
+    #              "augment": 0,
+    #              "preprocess": False,
+    #              "sub_sample": 0.0,
+    #              "is_imbalanced": True,
+    #              "n": 1,
+    #          },
+    #          {
+    #              "dataset": "bace_classification",
+    #              "splitter": "random",
+    #              "task": "classification",
+    #              "k": 5,
+    #              "augment": 0,
+    #              "preprocess": False,
+    #              "sub_sample": 0.0,
+    #              "is_imbalanced": True,
+    #              "n": 4,
+    #          },
+    #          {
+    #              "dataset": "clintox",
+    #              "splitter": "scaffold",
+    #              "task": "classification",
+    #              "k": 5,
+    #              "augment": 0,
+    #              "preprocess": False,
+    #              "sub_sample": 0.0,
+    #              "is_imbalanced": True,
+    #              "n": 1,
+    #          },
+    #          {
+    #              "dataset": "clintox",
+    #              "splitter": "random",
+    #              "task": "classification",
+    #              "k": 5,
+    #              "augment": 0,
+    #              "preprocess": False,
+    #              "sub_sample": 0.0,
+    #              "is_imbalanced": True,
+    #              "n": 4,
+    #          },
+    #          {
+    #              "dataset": "tox21",
+    #              "splitter": "scaffold",
+    #              "task": "classification",
+    #              "k": 5,
+    #              "augment": 0,
+    #              "preprocess": False,
+    #              "sub_sample": 0.0,
+    #              "is_imbalanced": True,
+    #              "n": 1,
+    #          },
+    #          {
+    #              "dataset": "tox21",
+    #              "splitter": "random",
+    #              "task": "classification",
+    #              "k": 5,
+    #              "augment": 0,
+    #              "preprocess": False,
+    #              "sub_sample": 0.0,
+    #              "is_imbalanced": True,
+    #              "n": 4,
+    #          },
+    #          {
+    #              "dataset": "hiv",
+    #              "splitter": "scaffold",
+    #              "task": "classification",
+    #              "k": 5,
+    #              "augment": 0,
+    #              "preprocess": False,
+    #              "sub_sample": 0.0,
+    #              "is_imbalanced": True,
+    #              "n": 1,
+    #          },
+    #          {
+    #              "dataset": "muv",
+    #              "splitter": "random",
+    #              "task": "classification",
+    #              "k": 5,
+    #              "augment": 0,
+    #              "preprocess": False,
+    #              "sub_sample": 0.0,
+    #              "is_imbalanced": True,
+    #              "n": 4,
+    #          },
+    #         {
+    #            "dataset": "schneider",
+    #            "splitter": "random",
+    #             "task": "classification",
+    #             "k": 5,
+    #             "augment": 0,
+    #             "preprocess": True,
+    #             "sub_sample": 0.0,
+    #             "is_imbalanced": False,
+    #             "n": 1,
+    #         },
+    #     ]
+    # )
 
 
 if __name__ == "__main__":
