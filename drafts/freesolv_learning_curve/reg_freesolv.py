@@ -10,8 +10,8 @@ import numpy as np
 import selfies as sf
 from sklearn.metrics import mean_squared_error,mean_absolute_error
 import random
-from timeit import default_timer as timer
-from gzip_utils import bin_vectors, tokenize
+from gzip_utils import *
+import pdb
 random.seed(42)
 
 
@@ -54,8 +54,38 @@ def molnet_loader(type_preproc,
 if __name__ == "__main__":
 
     configs = [
+            {
+        "dataset": "delaney",
+        "splitter": "random",
+        "task": "regression_knn",
+        "k": 25,
+        "augment": 0,
+        "type_preproc": "default",
+        "preprocess": False,
+        "sub_sample": 0.0,
+        "is_imbalanced": False,
+        "n": 4,
+        "bins": 70,
+        "smilesANDvec": True,
+        "label" : "SMILES & Vector, Delaney"
+    },
+            {
+        "dataset": "delaney",
+        "splitter": "random",
+        "task": "regression_knn",
+        "k": 25,
+        "augment": 0,
+        "type_preproc": "default",
+        "preprocess": False,
+        "sub_sample": 0.0,
+        "is_imbalanced": False,
+        "n": 4,
+        "bins": 70,
+        "smilesANDvec": False,
+        "label" : "SMILES, Delaney"
+    },
     {
-        "dataset": "freesolv",
+        "dataset": "sampl",
         "label" : "SMILES",
         "splitter": "random",
         "task": "regression_knn",
@@ -65,12 +95,12 @@ if __name__ == "__main__":
         "type_preproc": "default",
         "sub_sample": 0.0,
         "is_imbalanced": False,
-        "n": 10,
+        "n": 4,
         "bins": 70,
         "smilesANDvec": False
-    },        
+    },
     {
-        "dataset": "freesolv",
+        "dataset": "sampl",
         "label" : "SMILES & Vector",
         "splitter": "random",
         "task": "regression_knn",
@@ -80,102 +110,10 @@ if __name__ == "__main__":
         "type_preproc": "default",
         "sub_sample": 0.0,
         "is_imbalanced": False,
-        "n": 10,
+        "n": 4,
         "bins": 70,
         "smilesANDvec": True
-    },
-    #{
-    #    "dataset": "freesolv",
-    #    "label" : "token. SMILES",
-    #    "splitter": "random",
-    #    "task": "regression_knn",
-    #    "k": 25,
-    #    "augment": 0,
-    #    "preprocess": True,
-    #    "type_preproc": "tok_smiles",
-    #    "sub_sample": 0.0,
-    #    "is_imbalanced": False,
-    #    "n": 10,
-    #    "bins": 70,
-    #    "smilesANDvec": False
-    #},        
-    #{
-    #    "dataset": "freesolv",
-    #    "label" : "token. SMILES & Vector",
-    #    "splitter": "random",
-    #    "task": "regression_knn",
-    #    "k": 25,
-    #    "augment": 0,
-    #    "preprocess": True,
-    #    "type_preproc": "tok_smiles",
-    #    "sub_sample": 0.0,
-    #    "is_imbalanced": False,
-    #    "n": 10,
-    #    "bins": 70,
-    #    "smilesANDvec": True
-    #},
-    #{
-    #    "dataset": "freesolv",
-    #    "label" : "SELFIES",
-    #    "splitter": "random",
-    #    "task": "regression_knn",
-    #    "k": 25,
-    #    "augment": 0,
-    #    "preprocess": True,
-    #    "type_preproc": "selfies",
-    #    "sub_sample": 0.0,
-    #    "is_imbalanced": False,
-    #    "n": 10,
-    #    "bins": 70,
-    #    "smilesANDvec": False
-    #},        
-    #{
-    #    "dataset": "freesolv",
-    #    "label" : "SELFIES & Vector",
-    #    "splitter": "random",
-    #    "task": "regression_knn",
-    #    "k": 25,
-    #    "augment": 0,
-    #    "preprocess": True,
-    #    "type_preproc": "selfies",
-    #    "sub_sample": 0.0,
-    #    "is_imbalanced": False,
-    #    "n": 10,
-    #    "bins": 70,
-    #    "smilesANDvec": True
-    #},
-    #{
-        #"dataset": "freesolv",
-        #"splitter": "random",
-        #"task": "regression_krr",
-        #"kfold": 5,
-        #"augment": 0,
-        #"gammas": np.logspace(-1, 3, 13),
-        #"lambdas": [1e-7, 1e-6, 1e-5],
-        #"preprocess": False,
-        #"type_preproc": "default",
-        #"sub_sample": 0.0,
-        #"is_imbalanced": False,
-        #"n": 4,
-        #"bins": 70,
-        #"smilesANDvec": False
-        #},
-        #{
-        #"dataset": "freesolv",
-        #"splitter": "random",
-        #"task": "regression_krr",
-        #"kfold": 5,
-        #"augment": 0,
-        #"gammas": np.logspace(-1, 3, 13),
-        #"lambdas": [1e-7, 1e-6, 1e-5],
-        #"preprocess": False,
-        #"type_preproc": "default",
-        #"sub_sample": 0.0,
-        #"is_imbalanced": False,
-        #"n": 4,
-        #"bins": 70,
-        #"smilesANDvec": True
-        #}
+    }
     ]
 
     N = [2**i for i in range(4, 10)]
@@ -196,31 +134,20 @@ if __name__ == "__main__":
                 transformers=[])
 
             if config["smilesANDvec"]:
-                #after featurization we have to add the vectors to the SMILES
-                featurizer_rdkit = dc.feat.RDKitDescriptors(is_normalized=True)
-                vectors_train = bin_vectors(featurizer_rdkit.featurize(SMILES_train), config["bins"])
-                featurizer_rdkit = 0 
-                featurizer_rdkit = dc.feat.RDKitDescriptors(is_normalized=True)
-                vectors_valid = bin_vectors(featurizer_rdkit.featurize(SMILES_valid), config["bins"])
-                featurizer_rdkit = 0
-                featurizer_rdkit = dc.feat.RDKitDescriptors(is_normalized=True)
-                vectors_test  = bin_vectors(featurizer_rdkit.featurize(SMILES_test), config["bins"])
-                
-                X_train = np.array([np.array(s+x) for s,x in zip(X_train,vectors_train)])
-                X_valid = np.array([np.array(s+x) for s,x in zip(X_valid,vectors_valid)])
-                X_test = np.array([np.array(s+x) for s,x in zip(X_test,vectors_test)])
+                X_train = get_smiles_vec_rep(SMILES_train, config=config)
+                X_valid = get_smiles_vec_rep(SMILES_valid, config=config)
+                X_test  = get_smiles_vec_rep(SMILES_test, config=config)
 
-            
             curr_lrn_curve = []
             if config["task"] == "regression_knn":
                 for n in N:
                     valid_preds = regress(X_train, y_train, X_valid, config["k"])
                     #timing for the prediction
 
-                    start = timer()
+                    
                     test_preds = regress(X_train[:n], y_train[:n], X_test, config["k"])
-                    end = timer()
-                    print(f"{config['smilesANDvec']}, time : {end - start}")
+                    
+                    
                     test_mae = mean_absolute_error(y_test,test_preds)
                     curr_lrn_curve.append(test_mae)
 
@@ -261,6 +188,7 @@ if __name__ == "__main__":
                 },
             )
         )
+
     all_learning_curves = np.array(all_learning_curves)
 
 
@@ -302,7 +230,7 @@ if __name__ == "__main__":
     ax.set_xticklabels(N)
     ax.tick_params(axis='both', which='minor', size=0)
     #set y ticks
-    yticks = [0.3, 0.4, 0.6, 0.8]
+    yticks = [3.0, 2.0, 1.5, 1.0]
     ax.set_yticks(yticks)
     ax.set_yticklabels(yticks)
     # Add grid
