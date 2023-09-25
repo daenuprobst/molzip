@@ -1,0 +1,24 @@
+[project]
+name = "molzip"
+version = "0.9.1"
+description = "An implementation of compression-based regression and classification for molecular SMILES."
+readme = "README.md"
+dependencies = ["numpy>=1.22.3"]
+license = { file = "LICENSE" }
+keywords = [
+    "chemistry",
+    "cheminformatics",
+    "SMILES",
+    "compression",
+    "zip",
+    "regression",
+    "classification",
+]
+
+[project.urls]
+Homepage = "https://github.com/daenuprobst/molzip"
+
+# [project.scripts]
+# find_best_ngrams = "smizip.scripts.find_best_ngrams:main"
+# smizip = "smizip.scripts.compress:main"
+# add_char_to_ngrams = "smizip.scripts.add_char_to_ngrams:main"

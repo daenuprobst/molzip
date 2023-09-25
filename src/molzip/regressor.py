@@ -1,18 +1,15 @@
 import gzip
 import multiprocessing
-from typing import Iterable
-from collections import Counter
+from typing import Any
 from functools import partial
 import numpy as np
-from tqdm import tqdm
 from scipy.linalg import solve
-from sklearn.metrics.pairwise import pairwise_distances
 from sklearn.model_selection import KFold
 from sklearn.metrics import mean_squared_error
 from sklearn.manifold import MDS
 
 
-def regress(x1, X_train, y_train, k, compressor=gzip):
+def regress(x1, X_train, y_train, k: int, compressor: Any = gzip):
     Cx1 = len(compressor.compress(x1.encode()))
     distance_from_x1 = []
 
@@ -36,11 +33,11 @@ def regress(x1, X_train, y_train, k, compressor=gzip):
     return task_preds
 
 
-class ZIPRegressor:
-    def __init__(self) -> None:
+class ZipRegressor(object):
+    def __init__(self) -> "ZipRegressor":
         pass
 
-    def fit_predict(self, X_train, y_train, X_test, k):
+    def fit_predict(self, X_train, y_train, X_test, k: int):
         preds = []
 
         cpu_count = multiprocessing.cpu_count()

@@ -4,13 +4,14 @@ import re
 from sklearn.model_selection import train_test_split
 from rdkit.Chem.AllChem import MolFromSmiles, MolToSmiles
 from pytablewriter import MarkdownTableWriter
-from mhfp.encoder import MHFPEncoder
 import selfies as sf
 import deepsmiles as ds
 import deepchem.molnet as mn
 import pandas as pd
 import deepchem as dc
+from descriptastorus.descriptors.rdNormalizedDescriptors import RDKit2DNormalized
 from pathlib import Path
+
 
 def sub_sample(
     X: np.array, Y: np.array, p: float = 0.5, seed=666
@@ -48,22 +49,30 @@ def augment(X: np.array, Y: np.array, n: int = 5) -> Tuple[np.array, np.array]:
     return np.array(X_aug), np.array(y_aug)
 
 
-def get_smiles_vec_rep(SMILES, config):
+def get_smiles_vec_rep(smiles, config):
     featurizer_rdkit = 0
     featurizer_rdkit = dc.feat.RDKitDescriptors(is_normalized=True)
-    
-    feature_vectors = featurizer_rdkit.featurize(SMILES)
-    indices_with_nan = [i for i, subarray in enumerate(feature_vectors) if np.isnan(subarray).any()]
+
+    feature_vectors = featurizer_rdkit.featurize(smiles)
+    indices_with_nan = [
+        i for i, subarray in enumerate(feature_vectors) if np.isnan(subarray).any()
+    ]
+
     if len(indices_with_nan) > 0:
-        feature_vectors = np.array([subarray for subarray in feature_vectors if not np.isnan(subarray).any()])
+        feature_vectors = np.array(
+            [subarray for subarray in feature_vectors if not np.isnan(subarray).any()]
+        )
         vectors = bin_vectors(feature_vectors, config["bins"])
     else:
         vectors = bin_vectors(feature_vectors, config["bins"])
 
-    return np.array([np.array(s+x) for s,x in zip(SMILES,vectors)]), indices_with_nan
+    return (
+        np.array([np.array(s + x) for s, x in zip(smiles, vectors)]),
+        indices_with_nan,
+    )
+
 
 def combined_bin_vectors(X, num_bins):
-
     """
 
     Convert a 2D numpy array of vectors into a list of string representations based on variable length binning and delta encoding.
@@ -79,30 +88,33 @@ def combined_bin_vectors(X, num_bins):
     neg_vector = -X_flattened[X_flattened < 0]  # Flip sign for binning
 
     # Create variable bins
-    pos_bins = np.percentile(pos_vector, np.linspace(0, 100, num_bins + 1)) if len(pos_vector) > 0 else np.array([0, 1])
-    neg_bins = np.percentile(neg_vector, np.linspace(0, 100, num_bins + 1)) if len(neg_vector) > 0 else np.array([0, 1])
+    pos_bins = (
+        np.percentile(pos_vector, np.linspace(0, 100, num_bins + 1))
+        if len(pos_vector) > 0
+        else np.array([0, 1])
+    )
+    neg_bins = (
+        np.percentile(neg_vector, np.linspace(0, 100, num_bins + 1))
+        if len(neg_vector) > 0
+        else np.array([0, 1])
+    )
 
     # Create a mapping from bin number to Unicode character
-    bin_to_char = {i+1: chr(9786 + i) for i in range(num_bins)}
+    bin_to_char = {i + 1: chr(9786 + i) for i in range(num_bins)}
 
     # Apply binning to each vector difference
 
     string_reps = []
 
     for vector in X_diff:
-
         # Digitize the vectors
 
         pos_digitized = np.digitize(vector[vector >= 0], pos_bins)
         neg_digitized = np.digitize(-vector[vector < 0], neg_bins)
 
-
-
         # Convert digitized vectors to string representation
-        pos_string_rep = [bin_to_char.get(num, '?') for num in pos_digitized]
+        pos_string_rep = [bin_to_char.get(num, "?") for num in pos_digitized]
         neg_string_rep = [f'✖{bin_to_char.get(num, "?")}' for num in neg_digitized]
-
-
 
         # Combine the representations in the original order
 
@@ -111,23 +123,19 @@ def combined_bin_vectors(X, num_bins):
         neg_index = 0
 
         for num in vector:
-
             if num >= 0:
-
                 string_rep.append(pos_string_rep[pos_index])
                 pos_index += 1
             else:
                 string_rep.append(neg_string_rep[neg_index])
                 neg_index += 1
 
-        string_reps.append(''.join(string_rep))
+        string_reps.append("".join(string_rep))
 
     return string_reps
-
 
 
 def delta_variable_bin_vectors(X, num_bins):
-
     """
 
     Convert a 2D numpy array of vectors into a list of string representations based on variable length binning and delta encoding.
@@ -138,42 +146,39 @@ def delta_variable_bin_vectors(X, num_bins):
 
     X_diff = np.diff(X, axis=1)
 
-    
-
     # Create bins for positive and negative numbers separately
 
     X_flattened = X_diff.flatten()
     pos_vector = X_flattened[X_flattened >= 0]
     neg_vector = -X_flattened[X_flattened < 0]  # Flip sign for binning
 
-
-
     # Create variable bins
-    pos_bins = np.percentile(pos_vector, np.linspace(0, 100, num_bins + 1)) if len(pos_vector) > 0 else np.array([0, 1])
-    neg_bins = np.percentile(neg_vector, np.linspace(0, 100, num_bins + 1)) if len(neg_vector) > 0 else np.array([0, 1])
-
-
+    pos_bins = (
+        np.percentile(pos_vector, np.linspace(0, 100, num_bins + 1))
+        if len(pos_vector) > 0
+        else np.array([0, 1])
+    )
+    neg_bins = (
+        np.percentile(neg_vector, np.linspace(0, 100, num_bins + 1))
+        if len(neg_vector) > 0
+        else np.array([0, 1])
+    )
 
     # Create a mapping from bin number to Unicode character
-    bin_to_char = {i+1: chr(9786 + i) for i in range(num_bins)}
+    bin_to_char = {i + 1: chr(9786 + i) for i in range(num_bins)}
     # Apply binning to each vector difference
     string_reps = []
 
     for vector in X_diff:
-
         # Digitize the vectors
 
         pos_digitized = np.digitize(vector[vector >= 0], pos_bins)
         neg_digitized = np.digitize(-vector[vector < 0], neg_bins)
 
-
-
         # Convert digitized vectors to string representation
 
-        pos_string_rep = [bin_to_char.get(num, '?') for num in pos_digitized]
+        pos_string_rep = [bin_to_char.get(num, "?") for num in pos_digitized]
         neg_string_rep = [f'✖{bin_to_char.get(num, "?")}' for num in neg_digitized]
-
-
 
         # Combine the representations in the original order
 
@@ -182,7 +187,6 @@ def delta_variable_bin_vectors(X, num_bins):
         neg_index = 0
 
         for num in vector:
-
             if num >= 0:
                 string_rep.append(pos_string_rep[pos_index])
                 pos_index += 1
@@ -191,14 +195,12 @@ def delta_variable_bin_vectors(X, num_bins):
                 string_rep.append(neg_string_rep[neg_index])
                 neg_index += 1
 
-        string_reps.append(''.join(string_rep))
+        string_reps.append("".join(string_rep))
 
     return string_reps
 
 
-
 def variable_bin_vectors(X, num_bins):
-
     """
 
     Convert a 2D numpy array of vectors into a list of string representations based on variable length binning.
@@ -211,29 +213,32 @@ def variable_bin_vectors(X, num_bins):
     pos_vector = X_flattened[X_flattened >= 0]
     neg_vector = -X_flattened[X_flattened < 0]  # Flip sign for binning
     # Create variable bins
-    pos_bins = np.percentile(pos_vector, np.linspace(0, 100, num_bins + 1)) if len(pos_vector) > 0 else np.array([0, 1])
-    neg_bins = np.percentile(neg_vector, np.linspace(0, 100, num_bins + 1)) if len(neg_vector) > 0 else np.array([0, 1])
+    pos_bins = (
+        np.percentile(pos_vector, np.linspace(0, 100, num_bins + 1))
+        if len(pos_vector) > 0
+        else np.array([0, 1])
+    )
+    neg_bins = (
+        np.percentile(neg_vector, np.linspace(0, 100, num_bins + 1))
+        if len(neg_vector) > 0
+        else np.array([0, 1])
+    )
 
     # Create a mapping from bin number to Unicode character
-    bin_to_char = {i+1: chr(9786 + i) for i in range(num_bins)}
+    bin_to_char = {i + 1: chr(9786 + i) for i in range(num_bins)}
 
     # Apply binning to each vector
     string_reps = []
 
     for vector in X:
-
         # Digitize the vectors
 
         pos_digitized = np.digitize(vector[vector >= 0], pos_bins)
         neg_digitized = np.digitize(-vector[vector < 0], neg_bins)
 
-
-
         # Convert digitized vectors to string representation
-        pos_string_rep = [bin_to_char.get(num, '?') for num in pos_digitized]
+        pos_string_rep = [bin_to_char.get(num, "?") for num in pos_digitized]
         neg_string_rep = [f'✖{bin_to_char.get(num, "?")}' for num in neg_digitized]
-
-
 
         # Combine the representations in the original order
         string_rep = []
@@ -241,21 +246,16 @@ def variable_bin_vectors(X, num_bins):
         neg_index = 0
 
         for num in vector:
-
             if num >= 0:
-
                 string_rep.append(pos_string_rep[pos_index])
                 pos_index += 1
 
             else:
-
                 string_rep.append(neg_string_rep[neg_index])
                 neg_index += 1
 
-        string_reps.append(''.join(string_rep))
+        string_reps.append("".join(string_rep))
     return string_reps
-
-
 
 
 def bin_vectors(X, num_bins):
@@ -273,7 +273,7 @@ def bin_vectors(X, num_bins):
     The function first determines the global minimum and maximum values across all vectors.
     It then creates separate bins for positive and negative values. Each value in the vectors
     is then assigned to a bin and represented by a unique Unicode character. Negative values
-    are prefixed with a special '✖' character. The binned representations of the vectors are 
+    are prefixed with a special '✖' character. The binned representations of the vectors are
     then returned as a list of strings.
     """
 
@@ -282,11 +282,15 @@ def bin_vectors(X, num_bins):
     pos_vector = X_flattened[X_flattened >= 0]
     neg_vector = -X_flattened[X_flattened < 0]  # Flip sign for binning
 
-    pos_bins = np.linspace(0, max(pos_vector) if len(pos_vector) > 0 else 1, num_bins+1)
-    neg_bins = np.linspace(0, max(neg_vector) if len(neg_vector) > 0 else 1, num_bins+1)
+    pos_bins = np.linspace(
+        0, max(pos_vector) if len(pos_vector) > 0 else 1, num_bins + 1
+    )
+    neg_bins = np.linspace(
+        0, max(neg_vector) if len(neg_vector) > 0 else 1, num_bins + 1
+    )
 
     # Create a mapping from bin number to Unicode character
-    bin_to_char = {i+1: chr(9786 + i) for i in range(num_bins)}
+    bin_to_char = {i + 1: chr(9786 + i) for i in range(num_bins)}
 
     # Apply binning to each vector
     string_reps = []
@@ -296,7 +300,7 @@ def bin_vectors(X, num_bins):
         neg_digitized = np.digitize(-vector[vector < 0], neg_bins)
 
         # Convert digitized vectors to string representation
-        pos_string_rep = [bin_to_char.get(num, '?') for num in pos_digitized]
+        pos_string_rep = [bin_to_char.get(num, "?") for num in pos_digitized]
         neg_string_rep = [f'✖{bin_to_char.get(num, "?")}' for num in neg_digitized]
 
         # Combine the representations in the original order
@@ -311,29 +315,9 @@ def bin_vectors(X, num_bins):
                 string_rep.append(neg_string_rep[neg_index])
                 neg_index += 1
 
-        string_reps.append(''.join(string_rep))
+        string_reps.append("".join(string_rep))
 
     return string_reps
-
-
-enc = MHFPEncoder()
-
-
-def to_secfp(
-    smiles: str,
-    radius: int = 3,
-    rings: bool = True,
-    kekulize: bool = True,
-    min_radius: int = 1,
-) -> str:
-    return " ".join(
-        [
-            str(s)
-            for s in MHFPEncoder.shingling_from_mol(
-                MolFromSmiles(smiles), radius, rings, kekulize, min_radius
-            )
-        ]
-    )
 
 
 def write_table(results: List) -> None:
@@ -371,7 +355,6 @@ def write_table(results: List) -> None:
         writer.write_table()
 
 
-
 # Adapted from https://github.com/rxn4chemistry/rxnfp
 REGEX = re.compile(
     r"(\%\([0-9]{3}\)|\[[^\]]+]|Br?|Cl?|N|O|S|P|F|I|b|c|n|o|s|p|\||\(|\)|\.|=|#|-|\+|\\|\/|:|~|@|\?|>>?|\*|\$|\%[0-9]{2}|[0-9])"
@@ -385,9 +368,6 @@ def tokenize(smiles: str) -> List[str]:
 def preprocess(smiles: str, preproc: bool = False) -> str:
     if not preproc:
         return smiles
-        # return to_secfp(smiles, min_radius=0)
-        # return sf.encoder(smiles, strict=False)
-        # return ds.Converter(rings=True, branches=True).encode(smiles)
 
     smiles = MolToSmiles(
         MolFromSmiles(smiles),
@@ -400,29 +380,41 @@ def preprocess(smiles: str, preproc: bool = False) -> str:
 
 
 def molnet_loader(
-    name: str, preproc: bool = False, **kwargs
+    name: str, preproc: bool = False, task_name: str = None, **kwargs
 ) -> Tuple[str, np.array, np.array, np.array]:
     mn_loader = getattr(mn, f"load_{name}")
     dc_set = mn_loader(**kwargs)
 
     tasks, dataset, _ = dc_set
     train, valid, test = dataset
-    
+
+    y_train = train.y
+    y_valid = valid.y
+    y_test = test.y
+
+    task_idx = tasks.index(task_name) if task_name in tasks else -1
+    task_idx = 0
+
+    if task_idx >= 0:
+        y_train = np.expand_dims(y_train[:, task_idx], axis=1)
+        y_valid = np.expand_dims(y_valid[:, task_idx], axis=1)
+        y_test = np.expand_dims(y_test[:, task_idx], axis=1)
+
     X_train = np.array([preprocess(x, preproc) for x in train.ids])
     X_valid = np.array([preprocess(x, preproc) for x in valid.ids])
     X_test = np.array([preprocess(x, preproc) for x in test.ids])
 
-    if name == "freesolv" or name == "delaney" or name == "lipo" or name == "sampl":
+    if name in ["freesolv", "delaney", "lipo", "bace_regression", "sample"]:
         # for regression tasks
-        y_train = np.array(train.y, dtype=float)
-        y_valid = np.array(valid.y, dtype=float)
-        y_test = np.array(test.y, dtype=float)
+        y_train = np.array(y_train, dtype=float)
+        y_valid = np.array(y_valid, dtype=float)
+        y_test = np.array(y_test, dtype=float)
         print("Task is regression!")
     else:
         # for classification tasks
-        y_train = np.array(train.y, dtype=int)
-        y_valid = np.array(valid.y, dtype=int)
-        y_test = np.array(test.y, dtype=int)
+        y_train = np.array(y_train, dtype=int)
+        y_valid = np.array(y_valid, dtype=int)
+        y_test = np.array(y_test, dtype=int)
         print("Task is classification!")
 
     return tasks, X_train, y_train, X_valid, y_valid, X_test, y_test
@@ -455,6 +447,7 @@ def schneider_loader(
     # Just use test set as valid as no valid set is profided as is
     return ["Reaction Class"], X_train, y_train, X_test, y_test, X_test, y_test
 
+
 def adme_loader(name: str, preproc: bool = False, **kwargs):
     _, task_name = name.split("-")
     print(task_name)
@@ -466,9 +459,8 @@ def adme_loader(name: str, preproc: bool = False, **kwargs):
     train = pd.read_csv(adme_train_file)
     test = pd.read_csv(adme_test_file)
 
-    # Validation samples are not needed 
+    # Validation samples are not needed
     valid = train.sample(frac=0.1)
-
 
     X_train = np.array([preprocess(x, preproc) for x in train["smiles"]])
     X_valid = np.array([preprocess(x, preproc) for x in valid["smiles"]])

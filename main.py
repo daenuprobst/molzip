@@ -1,4 +1,4 @@
-
+from typing import List, Dict, Any
 import numpy as np
 import random
 from scipy.stats import pearsonr
@@ -9,15 +9,17 @@ from sklearn.metrics import (
     mean_absolute_error,
 )
 from sklearn.utils.class_weight import compute_class_weight
-from gzip_classifier import classify
-from gzip_regressor import regress
 from gzip_utils import *
 from config import *
-random.seed(666)
+
+from molzip import ZipRegressor, ZipClassifier
 
 
 def benchmark(configs: List[Dict[str, Any]]) -> None:
     results = []
+
+    regressor = ZipRegressor()
+    classifier = ZipClassifier()
 
     for config in configs:
         loader = molnet_loader
@@ -29,11 +31,13 @@ def benchmark(configs: List[Dict[str, Any]]) -> None:
             loader = adme_loader
 
         run_results = []
-        for _ in range(config["n"]):
+        for i_n in range(config["n"]):
+            random.seed(i_n)
             tasks, X_train, y_train, X_valid, y_valid, X_test, y_test = loader(
                 config["dataset"],
                 splitter=config["splitter"],
                 preproc=config["preprocess"],
+                task_name=config["task_name"] if "task_name" in config else None,
                 reload=False,
                 transformers=[],
             )
@@ -44,7 +48,7 @@ def benchmark(configs: List[Dict[str, Any]]) -> None:
             if config["sub_sample"] > 0.0:
                 X_train, y_train = sub_sample(X_train, y_train, config["sub_sample"])
 
-            if config["task"] == "classification":
+            if config["task"] in ["classification", "classification_vec"]:
                 # Get class weights
                 class_weights = []
                 if config["is_imbalanced"]:
@@ -55,11 +59,30 @@ def benchmark(configs: List[Dict[str, Any]]) -> None:
                             )
                         )
 
+                if config["task"] == "classification_vec":
+                    X_train, nan_inds_train = get_smiles_vec_rep(X_train, config=config)
+                    X_valid, nan_inds_valid = get_smiles_vec_rep(X_valid, config=config)
+                    X_test, nan_inds_test = get_smiles_vec_rep(X_test, config=config)
+                    # Some features are nan (because rdkit failed to compute partial charges for some molecules)
+                    if len(nan_inds_train) > 0:
+                        y_train = np.delete(y_train, nan_inds_train).reshape(-1, 1)
+                    if len(nan_inds_valid) > 0:
+                        y_valid = np.delete(y_valid, nan_inds_valid).reshape(-1, 1)
+                    if len(nan_inds_test) > 0:
+                        y_test = np.delete(y_test, nan_inds_test).reshape(-1, 1)
+
+                    valid_preds = regressor.fit_predict(
+                        X_train, y_train, X_valid, config["k"]
+                    )
+                    test_preds = regressor.fit_predict(
+                        X_train, y_train, X_test, config["k"]
+                    )
+
                 # Run classification
-                valid_preds = classify(
+                valid_preds = classifier.fit_predict(
                     X_train, y_train, X_valid, config["k"], class_weights
                 )
-                test_preds = classify(
+                test_preds = classifier.fit_predict(
                     X_train, y_train, X_test, config["k"], class_weights
                 )
 
@@ -95,25 +118,31 @@ def benchmark(configs: List[Dict[str, Any]]) -> None:
                 run_results.append([valid_auroc, valid_f1, test_auroc, test_f1])
             else:
                 if config["task"] == "regression":
-                    
-                    valid_preds = regress(X_train, y_train, X_valid, config["k"])
-                    test_preds = regress(X_train, y_train, X_test, config["k"])
-                
+                    valid_preds = regressor.fit_predict(
+                        X_train, y_train, X_valid, config["k"]
+                    )
+                    test_preds = regressor.fit_predict(
+                        X_train, y_train, X_test, config["k"]
+                    )
                 elif config["task"] == "regression_vec":
                     X_train, nan_inds_train = get_smiles_vec_rep(X_train, config=config)
                     X_valid, nan_inds_valid = get_smiles_vec_rep(X_valid, config=config)
-                    X_test,  nan_inds_test  = get_smiles_vec_rep(X_test, config=config)
-                    #Some features are nan (because rdkit failed to compute partial charges for some molecules)
+                    X_test, nan_inds_test = get_smiles_vec_rep(X_test, config=config)
+                    # Some features are nan (because rdkit failed to compute partial charges for some molecules)
                     if len(nan_inds_train) > 0:
-                        y_train = np.delete(y_train, nan_inds_train).reshape(-1,1)
+                        y_train = np.delete(y_train, nan_inds_train).reshape(-1, 1)
                     if len(nan_inds_valid) > 0:
-                        y_valid = np.delete(y_valid, nan_inds_valid).reshape(-1,1)
+                        y_valid = np.delete(y_valid, nan_inds_valid).reshape(-1, 1)
                     if len(nan_inds_test) > 0:
-                        y_test = np.delete(y_test, nan_inds_test).reshape(-1,1)
+                        y_test = np.delete(y_test, nan_inds_test).reshape(-1, 1)
 
-                    valid_preds = regress(X_train, y_train, X_valid, config["k"])
-                    test_preds  = regress(X_train, y_train, X_test, config["k"])
-                    
+                    valid_preds = regressor.fit_predict(
+                        X_train, y_train, X_valid, config["k"]
+                    )
+                    test_preds = regressor.fit_predict(
+                        X_train, y_train, X_test, config["k"]
+                    )
+
                 else:
                     raise ValueError(f"Unknown task {config['task']}")
                 # Compute metrics
@@ -126,12 +155,7 @@ def benchmark(configs: List[Dict[str, Any]]) -> None:
 
                 test_r = pearsonr(y_test.flatten(), test_preds.flatten())
                 test_rmse = mean_squared_error(y_test, test_preds, squared=False)
-                test_mae = mean_absolute_error(
-                    y_test,
-                    test_preds
-                )
-
-
+                test_mae = mean_absolute_error(y_test, test_preds)
 
                 print(f"\n{config['dataset']} ({len(tasks)} tasks)")
                 print(config)
@@ -162,6 +186,7 @@ def benchmark(configs: List[Dict[str, Any]]) -> None:
 
 def main():
     benchmark(all_tests)
+
 
 if __name__ == "__main__":
     main()
