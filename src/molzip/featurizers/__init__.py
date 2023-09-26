@@ -1,0 +1,1 @@
+from molzip.featurizers.zip_featurizer import ZipFeaturizer

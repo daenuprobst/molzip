@@ -3,7 +3,12 @@ name = "molzip"
 version = "0.9.1"
 description = "An implementation of compression-based regression and classification for molecular SMILES."
 readme = "README.md"
-dependencies = ["numpy>=1.22.3"]
+dependencies = [
+    "numpy>=1.22.3",
+    "descriptastorus>=2.6.1",
+    "selfies>=2.1.1",
+    "deepsmiles>=1.0.1",
+]
 license = { file = "LICENSE" }
 keywords = [
     "chemistry",

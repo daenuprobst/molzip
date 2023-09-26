@@ -1,5 +1,5 @@
 import numpy as np
-from typing import List, Dict, Any, Tuple
+from typing import List, Dict, Any, Tuple, Optional
 import re
 from sklearn.model_selection import train_test_split
 from rdkit.Chem.AllChem import MolFromSmiles, MolToSmiles
@@ -50,10 +50,15 @@ def augment(X: np.array, Y: np.array, n: int = 5) -> Tuple[np.array, np.array]:
 
 
 def get_smiles_vec_rep(smiles, config):
-    featurizer_rdkit = 0
-    featurizer_rdkit = dc.feat.RDKitDescriptors(is_normalized=True)
+    generator = RDKit2DNormalized()
 
-    feature_vectors = featurizer_rdkit.featurize(smiles)
+    feature_vectors = []
+    for s in smiles:
+        feature_vectors.append(generator.process(s)[1:])
+    feature_vectors = np.array(feature_vectors)
+
+    # feature_vectors = featurizer_rdkit.featurize(smiles)
+
     indices_with_nan = [
         i for i, subarray in enumerate(feature_vectors) if np.isnan(subarray).any()
     ]
@@ -473,3 +478,32 @@ def adme_loader(name: str, preproc: bool = False, **kwargs):
     tasks = ["activity"]
 
     return tasks, X_train, y_train, X_valid, y_valid, X_test, y_test
+
+
+def pdbbind_loader(
+    name: str, preproc: bool = False, properties: Optional[List[str]] = None, **kwargs
+):
+    if properties is None or len(properties) == 0:
+        properties = ["ligand_smiles"]
+
+    root_path = Path(__file__).resolve().parent
+    meta_path = Path(root_path, "data/pdbbind/meta.csv")
+
+    data = {"train": [[], []], "valid": [[], []], "test": [[], []]}
+    df = pd.read_csv(meta_path)
+
+    for _, row in df.iterrows():
+        data[row["split"]][0].append(
+            " ".join([v for k, v in row.items() if k in properties])
+        )
+        data[row["split"]][1].append([row["label"]])
+
+    return (
+        ["-logKd/Ki"],
+        np.array(data["train"][0]),
+        np.array(data["train"][1]),
+        np.array(data["valid"][0]),
+        np.array(data["valid"][1]),
+        np.array(data["test"][0]),
+        np.array(data["test"][1]),
+    )

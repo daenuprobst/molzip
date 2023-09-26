@@ -13,6 +13,7 @@ from gzip_utils import *
 from config import *
 
 from molzip import ZipRegressor, ZipClassifier
+from molzip.featurizers import ZipFeaturizer
 
 
 def benchmark(configs: List[Dict[str, Any]]) -> None:
@@ -22,6 +23,9 @@ def benchmark(configs: List[Dict[str, Any]]) -> None:
     classifier = ZipClassifier()
 
     for config in configs:
+        n_bins = config["bins"] if "bins" in config else 128
+        zip_featurizer = ZipFeaturizer(n_bins)
+
         loader = molnet_loader
 
         if config["dataset"] in ["schneider"]:
@@ -29,6 +33,9 @@ def benchmark(configs: List[Dict[str, Any]]) -> None:
 
         if config["dataset"].startswith("adme"):
             loader = adme_loader
+
+        if config["dataset"] == "pdbbind":
+            loader = pdbbind_loader
 
         run_results = []
         for i_n in range(config["n"]):
@@ -38,15 +45,16 @@ def benchmark(configs: List[Dict[str, Any]]) -> None:
                 splitter=config["splitter"],
                 preproc=config["preprocess"],
                 task_name=config["task_name"] if "task_name" in config else None,
+                properties=config["properties"] if "properties" in config else None,
                 reload=False,
                 transformers=[],
             )
 
-            if config["augment"] > 0:
-                X_train, y_train = augment(X_train, y_train, config["augment"])
-
-            if config["sub_sample"] > 0.0:
-                X_train, y_train = sub_sample(X_train, y_train, config["sub_sample"])
+            if "transforms" in config:
+                for transform in config["transforms"]:
+                    X_train = transform(X_train)
+                    X_valid = transform(X_valid)
+                    X_test = transform(X_test)
 
             if config["task"] in ["classification", "classification_vec"]:
                 # Get class weights
@@ -60,9 +68,9 @@ def benchmark(configs: List[Dict[str, Any]]) -> None:
                         )
 
                 if config["task"] == "classification_vec":
-                    X_train, nan_inds_train = get_smiles_vec_rep(X_train, config=config)
-                    X_valid, nan_inds_valid = get_smiles_vec_rep(X_valid, config=config)
-                    X_test, nan_inds_test = get_smiles_vec_rep(X_test, config=config)
+                    X_train, nan_inds_train = zip_featurizer(X_train)
+                    X_valid, nan_inds_valid = zip_featurizer(X_valid)
+                    X_test, nan_inds_test = zip_featurizer(X_test)
                     # Some features are nan (because rdkit failed to compute partial charges for some molecules)
                     if len(nan_inds_train) > 0:
                         y_train = np.delete(y_train, nan_inds_train).reshape(-1, 1)
@@ -125,9 +133,9 @@ def benchmark(configs: List[Dict[str, Any]]) -> None:
                         X_train, y_train, X_test, config["k"]
                     )
                 elif config["task"] == "regression_vec":
-                    X_train, nan_inds_train = get_smiles_vec_rep(X_train, config=config)
-                    X_valid, nan_inds_valid = get_smiles_vec_rep(X_valid, config=config)
-                    X_test, nan_inds_test = get_smiles_vec_rep(X_test, config=config)
+                    X_train, nan_inds_train = zip_featurizer(X_train)
+                    X_valid, nan_inds_valid = zip_featurizer(X_valid)
+                    X_test, nan_inds_test = zip_featurizer(X_test)
                     # Some features are nan (because rdkit failed to compute partial charges for some molecules)
                     if len(nan_inds_train) > 0:
                         y_train = np.delete(y_train, nan_inds_train).reshape(-1, 1)
