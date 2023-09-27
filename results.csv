@@ -1,0 +1,2 @@
+dataset,task,splitter,valid_auroc,valid_f1,test_auroc,test_f1
+pdbbind,regression,scaffold,1.48,1.093,1.504,1.187

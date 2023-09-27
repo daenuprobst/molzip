@@ -76,7 +76,8 @@ class ZipFeaturizer(object):
 
         feature_vectors = []
         for s in smiles:
-            feature_vectors.append(generator.process(s)[1:])
+            print(s)
+            feature_vectors.append(generator.process(s.split(" ")[0])[1:])
 
         feature_vectors = np.array(feature_vectors)
 
