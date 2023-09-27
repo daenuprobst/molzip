@@ -10,7 +10,7 @@ from sklearn.metrics import (
 )
 from sklearn.utils.class_weight import compute_class_weight
 from gzip_utils import *
-from config import *
+from augment_config import get_all_tests
 
 from molzip import ZipRegressor, ZipClassifier
 from molzip.featurizers import ZipFeaturizer
@@ -193,7 +193,7 @@ def benchmark(configs: List[Dict[str, Any]]) -> None:
 
 
 def main():
-    benchmark(all_tests)
+    benchmark(get_all_tests())
 
 
 if __name__ == "__main__":
