@@ -1,2 +1,4 @@
-dataset,task,splitter,valid_auroc,valid_f1,test_auroc,test_f1
-pdbbind,regression,scaffold,1.48,1.093,1.504,1.187
+dataset,task,splitter,valid_auroc,valid_f1,valid_r,test_auroc,test_f1,test_r
+bace_classification,classification,scaffold,0.656,0.662,0.0,0.668,0.664,0.0,
+bace_classification,classification_vec,scaffold,0.663,0.675,0.0,0.669,0.645,0.0,
+bbbp,classification,scaffold,0.933,0.936,0.0,0.665,0.657,0.0,

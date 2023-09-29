@@ -1,12 +1,19 @@
 import gzip
 import multiprocessing
-from typing import Iterable
+from typing import Iterable, Optional, Any
 from collections import Counter
 from functools import partial
 import numpy as np
 
 
-def classify(x1, X_train, y_train, k, class_weights=None, compressor=gzip):
+def classify(
+    x1: str,
+    X_train: Iterable[str],
+    y_train: np.ndarray,
+    k: int,
+    class_weights: Optional[Iterable] = None,
+    compressor: Any = gzip,
+) -> Iterable:
     Cx1 = len(compressor.compress(x1.encode()))
     distance_from_x1 = []
 
@@ -46,8 +53,19 @@ class ZipClassifier(object):
     def __init__(self) -> "ZipClassifier":
         pass
 
-    def fit_predict(self, X_train, y_train, X_test, k, class_weights):
+    def fit_predict(
+        self,
+        X_train: Iterable[str],
+        y_train: Iterable,
+        X: Iterable[str],
+        k: int = 5,
+        class_weights: Optional[Iterable] = None,
+    ) -> np.ndarray:
         preds = []
+        y_train = np.array(y_train)
+
+        if len(y_train.shape) == 1:
+            y_train = np.expand_dims(y_train, axis=1)
 
         cpu_count = multiprocessing.cpu_count()
 
@@ -60,7 +78,7 @@ class ZipClassifier(object):
                     k=k,
                     class_weights=class_weights,
                 ),
-                X_test,
+                X,
             )
 
         return np.array(preds)

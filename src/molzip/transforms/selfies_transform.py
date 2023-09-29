@@ -5,7 +5,16 @@ import selfies as sf
 
 class SelfiesTransform(BaseTransform):
     def __init__(self, **kwargs) -> "SelfiesTransform":
-        super().__init__()
+        super().__init__("SelfiesTransform")
 
     def transform(self, smiles: Iterable[str]) -> List[str]:
-        return [sf.encoder(s) for s in smiles]
+        result = []
+
+        for s in smiles:
+            s, rest = self.split(s)
+            try:
+                result.append(sf.encoder(s) + rest)
+            except:
+                result.append(s + rest)
+
+        return result

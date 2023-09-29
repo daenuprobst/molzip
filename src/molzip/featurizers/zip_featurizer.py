@@ -73,11 +73,13 @@ class ZipFeaturizer(object):
 
     def featurize(self, smiles: Iterable[str]) -> Tuple[np.ndarray, List[int]]:
         generator = RDKit2DNormalized()
-
         feature_vectors = []
         for s in smiles:
-            print(s)
-            feature_vectors.append(generator.process(s.split(" ")[0])[1:])
+            v = generator.process(s.split(" ")[0])
+            if v is not None:
+                feature_vectors.append(v[1:])
+            else:
+                feature_vectors.append(np.array([np.nan] * 200))
 
         feature_vectors = np.array(feature_vectors)
 

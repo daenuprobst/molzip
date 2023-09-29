@@ -1,19 +1,46 @@
 [![DOI](https://zenodo.org/badge/666335439.svg)](https://zenodo.org/badge/latestdoi/666335439)
 
 # Parameter-Free Molecular Classification and Regression with Gzip
-### Daniel Probst<sup>1</sup>, You?
-<sup>1</sup>Institute of Electrical and Micro Engineering, LTS2, EPFL
+
+## Quickstart
+
+Our implementation, MolZip, is available as as a PyPI package, simply install it using pip:
+
+```bash
+pip install molzip
+```
+
+After that, it is easy to get started with compression-based classification and regression of molecules.
+
+```python
+from molzip import ZipClassifier, ZipRegressor
+
+zc = ZipClassifier()
+zr = ZipRegressor()
+
+query = ["CNCO", "COCCCC"]
+
+pred = zc.fit_predict(["CNC", "COC", "CCC"], [1, 2, 3], query, k=2)
+multilabel_pred = zc.fit_predict(["CNC", "COC", "CCC"], [[1, 4], [2, 5], [3, 6]], query, k=2)
+
+pred = zr.fit_predict(["CNC", "COC", "CCC"], [1.0, 1.5, 2.0], query, k=2)
+pred_multitarget = zr.fit_predict(["CNC", "COC", "CCC"], [[1.0, 2.5], [1.5, 1.0], [2.0, 0.25]], query, k=2)
+```
 
 ## Abstract
+
 TBD
 
 ## Introduction
+
 The classification of a molecule on a wide variety of physicochemical and pharmakological properties, such as solubility, efficacy against specific diseases, or toxicity, has become a task of high interest in chemistry and biology. With the rise of deep learning during tha past decade, molecular classification has increasingly be carried out by ever-larger models, with mixed results. The newly published parameter-free text classification approach that makes use of Gzip compression has shown excellent performance compared to deep learning architectures, such as transformers, on benchmark data sets.[^1] As the SMILES string encoding of molecular graphs has been shown to be a well-performing molecular representation for applying NLP methods, such as transformers, to chemical tasks including molecular classification, a comparison with the Gzip-based classification method is also relevant in the context of molecular classification.
 
 ## Methods
+
 The Gzip-based classifier introduced in this article has been adapted from the implementation presented by Jiang et al. and differs in three points: (1) as, as the authors have noted, the Gzip-based classification method has a relatively high time complexity, multiprocessing has been added; (2) multi-task classification has been added; and (3) a class weighing scheme has been implemented to account for unbalanced data. Furthermore, the capability to preprocess data, in this case the SMILES strings, has been added to the calling program.
 
 ## Results
+
 The current results are presented in the table below. Data sets with random splits were ran a total of four times.
 
 |     Data Set      | Split  | AUROC (Valid) |  F1 (Valid)   | AUROC (Test)  |   F1 (Test)   |
@@ -48,7 +75,7 @@ Using SECFP (ECFP-style circular substructures as SMILES) doesn't increase the c
 |tox21              |random  |0.712 +/- 0.011|0.305 +/- 0.011|0.718 +/- 0.011|0.31 +/- 0.011 |
 |sider              |random  |0.604 +/- 0.022|0.62 +/- 0.022 |0.614 +/- 0.022|0.624 +/- 0.022|
 
-Implementing a GZip-based regressor (weighted kNN, k=10) shows performance comparable to baseline performance of common ML implementations from MoleculeNet (https://moleculenet.org/full-results).
+Implementing a GZip-based regressor (weighted kNN, k=10) shows performance comparable to baseline performance of common ML implementations from MoleculeNet (<https://moleculenet.org/full-results>).
 Interestingly there are improvements when the SMILES are tokenised.
 
 |Data Set|Split |AUROC/RMSE (Valid)|F1/MAE (Valid) |AUROC/RMSE (Test)| F1/MAE (Test) |
@@ -63,12 +90,14 @@ The classifier is also able to classify raw reaction SMILES from the Schneider50
 |---------|------|------------------|--------------|-----------------|-------------|
 |schneider|random|0.0 +/- 0.0       |0.801 +/- 0.0 |0.0 +/- 0.0      |0.801 +/- 0.0|
 
-
 ## Discussion
+
 TBD
 
 ## References
-[^1] https://arxiv.org/abs/2212.09410
+
+[^1] <https://arxiv.org/abs/2212.09410>
 
 # What is this?
+
 This is an experiment for a small open source manuscript/article that aims to validate and evaluate the performance of compression-based molecular classification using Gzip. If you want to join/help out, leave a message or a pull request that includes your name and, if available, your affiliation.

@@ -10,7 +10,7 @@ from sklearn.metrics import (
 )
 from sklearn.utils.class_weight import compute_class_weight
 from gzip_utils import *
-from augment_config import get_all_tests
+from config import get_all_tests
 
 from molzip import ZipRegressor, ZipClassifier
 from molzip.featurizers import ZipFeaturizer
@@ -43,7 +43,6 @@ def benchmark(configs: List[Dict[str, Any]]) -> None:
             tasks, X_train, y_train, X_valid, y_valid, X_test, y_test = loader(
                 config["dataset"],
                 splitter=config["splitter"],
-                preproc=config["preprocess"],
                 task_name=config["task_name"] if "task_name" in config else None,
                 properties=config["properties"] if "properties" in config else None,
                 reload=False,
@@ -86,6 +85,8 @@ def benchmark(configs: List[Dict[str, Any]]) -> None:
                         X_train, y_train, X_test, config["k"]
                     )
 
+                print(X_train, y_train, X_valid)
+
                 # Run classification
                 valid_preds = classifier.fit_predict(
                     X_train, y_train, X_valid, config["k"], class_weights
@@ -123,7 +124,7 @@ def benchmark(configs: List[Dict[str, Any]]) -> None:
                     f"Valid AUROC: {valid_auroc}, Valid F1: {valid_f1} , Test AUROC: {test_auroc}, Test F1: {test_f1}"
                 )
 
-                run_results.append([valid_auroc, valid_f1, test_auroc, test_f1])
+                run_results.append([valid_auroc, valid_f1, 0, test_auroc, test_f1, 0])
             else:
                 if config["task"] == "regression":
                     valid_preds = regressor.fit_predict(
@@ -171,7 +172,9 @@ def benchmark(configs: List[Dict[str, Any]]) -> None:
                     f"Valid R: {valid_r[0]}, Valid RMSE: {valid_rmse}, Valid MAE: {valid_mae}, Test R: {test_r[0]}, Test RMSE: {test_rmse}, Test MAE: {test_mae}"
                 )
 
-                run_results.append([valid_rmse, valid_mae, test_rmse, test_mae])
+                run_results.append(
+                    [valid_rmse, valid_mae, valid_r[0], test_rmse, test_mae, test_r[0]]
+                )
 
         run_results = np.array(run_results)
         results_means = np.mean(run_results, axis=0)
@@ -182,9 +185,11 @@ def benchmark(configs: List[Dict[str, Any]]) -> None:
                 config,
                 {
                     "valid_auroc": f"{round(results_means[0], 3)} +/- {round(results_stds[0], 3)}",
-                    "valid_f1": f"{round(results_means[1], 3)} +/- {round(results_stds[0], 3)}",
-                    "test_auroc": f"{round(results_means[2], 3)} +/- {round(results_stds[0], 3)}",
-                    "test_f1": f"{round(results_means[3], 3)} +/- {round(results_stds[0], 3)}",
+                    "valid_f1": f"{round(results_means[1], 3)} +/- {round(results_stds[1], 3)}",
+                    "valid_r": f"{round(results_means[2], 3)} +/- {round(results_stds[2], 3)}",
+                    "test_auroc": f"{round(results_means[3], 3)} +/- {round(results_stds[3], 3)}",
+                    "test_f1": f"{round(results_means[4], 3)} +/- {round(results_stds[4], 3)}",
+                    "test_r": f"{round(results_means[5], 3)} +/- {round(results_stds[5], 3)}",
                 },
             )
         )

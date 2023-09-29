@@ -336,8 +336,10 @@ def write_table(results: List) -> None:
                 config["splitter"],
                 result["valid_auroc"],
                 result["valid_f1"],
+                result["valid_r"],
                 result["test_auroc"],
                 result["test_f1"],
+                result["test_r"],
             ]
         )
 
@@ -349,29 +351,34 @@ def write_table(results: List) -> None:
             "Split",
             "AUROC/RMSE (Valid)",
             "F1/MAE (Valid)",
+            "-/R (Valid)",
             "AUROC/RMSE (Test)",
             "F1/MAE (Test)",
+            "-/R (Test)",
         ],
         value_matrix=values,
     )
 
     with open("results.csv", "w+") as f:
         result_props_head = ""
-        result_props_vals = ""
 
         if "result_props" in results[0][0]:
             result_props_head = ",".join(list(results[0][0]["result_props"].keys()))
             result_props_head = f",{result_props_head}"
 
-            result_props_vals = ",".join(
-                map(str, list(results[0][0]["result_props"].values()))
-            )
-            result_props_vals = f",{result_props_vals}"
-
         f.write(
-            f"dataset,task,splitter,valid_auroc,valid_f1,test_auroc,test_f1{result_props_head}\n"
+            f"dataset,task,splitter,valid_auroc,valid_f1,valid_r,test_auroc,test_f1,test_r{result_props_head}\n"
         )
         for config, result in results:
+            result_props_vals = ""
+
+            if "result_props" in config:
+                result_props_vals = ",".join(
+                    map(str, list(config["result_props"].values()))
+                )
+
+            result_props_vals = f",{result_props_vals}"
+
             f.write(
                 ",".join(
                     [
@@ -380,8 +387,10 @@ def write_table(results: List) -> None:
                         config["splitter"],
                         result["valid_auroc"].split(" ")[0],
                         result["valid_f1"].split(" ")[0],
+                        result["valid_r"].split(" ")[0],
                         result["test_auroc"].split(" ")[0],
                         result["test_f1"].split(" ")[0],
+                        result["test_r"].split(" ")[0],
                     ]
                 )
                 + f"{result_props_vals}\n"

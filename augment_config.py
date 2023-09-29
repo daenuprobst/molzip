@@ -4,7 +4,22 @@ from molzip.transforms import DeepsmilesTransform, SelfiesTransform, AugmentTran
 def get_all_tests():
     all_tests = []
 
-    for i in range(10):
+    for i in range(20):
+        all_tests.append(
+            {
+                "dataset": "bace_classification",
+                "splitter": "scaffold",
+                "task": "classification",
+                "k": 25,
+                "augment": 0,
+                "preprocess": False,
+                "sub_sample": 0.0,
+                "is_imbalanced": True,
+                "n": 1,
+                "transforms": [AugmentTransform(i)],
+                "result_props": {"augment_n": i},
+            }
+        )
         all_tests.append(
             {
                 "dataset": "bace_classification",
@@ -24,9 +39,11 @@ def get_all_tests():
                 "n": 1,
                 "transforms": [AugmentTransform(i)],
                 "result_props": {"augment_n": i},
-            },
+            }
+        )
+        all_tests.append(
             {
-                "dataset": "bace_classification",
+                "dataset": "bbbp",
                 "splitter": "scaffold",
                 "task": "classification",
                 "k": 25,
@@ -37,7 +54,9 @@ def get_all_tests():
                 "n": 1,
                 "transforms": [AugmentTransform(i)],
                 "result_props": {"augment_n": i},
-            },
+            }
+        )
+        all_tests.append(
             {
                 "dataset": "bbbp",
                 "splitter": "scaffold",
@@ -56,20 +75,9 @@ def get_all_tests():
                 "n": 1,
                 "transforms": [AugmentTransform(i)],
                 "result_props": {"augment_n": i},
-            },
-            {
-                "dataset": "bbbp",
-                "splitter": "scaffold",
-                "task": "classification",
-                "k": 25,
-                "augment": 0,
-                "preprocess": False,
-                "sub_sample": 0.0,
-                "is_imbalanced": True,
-                "n": 1,
-                "transforms": [AugmentTransform(i)],
-                "result_props": {"augment_n": i},
-            },
+            }
+        )
+        all_tests.append(
             {
                 "dataset": "delaney",
                 "splitter": "scaffold",
@@ -82,7 +90,9 @@ def get_all_tests():
                 "n": 1,
                 "transforms": [AugmentTransform(i)],
                 "result_props": {"augment_n": i},
-            },
+            }
+        )
+        all_tests.append(
             {
                 "dataset": "delaney",
                 "splitter": "scaffold",
@@ -97,9 +107,11 @@ def get_all_tests():
                 "vector": True,
                 "transforms": [AugmentTransform(i)],
                 "result_props": {"augment_n": i},
-            },
+            }
+        )
+        all_tests.append(
             {
-                "dataset": "sampl",
+                "dataset": "bace_regression",
                 "splitter": "scaffold",
                 "task": "regression",
                 "k": 5,
@@ -110,9 +122,11 @@ def get_all_tests():
                 "n": 1,
                 "transforms": [AugmentTransform(i)],
                 "result_props": {"augment_n": i},
-            },
+            }
+        )
+        all_tests.append(
             {
-                "dataset": "sampl",
+                "dataset": "bace_regression",
                 "splitter": "scaffold",
                 "task": "regression_vec",
                 "k": 5,
@@ -125,7 +139,7 @@ def get_all_tests():
                 "vector": True,
                 "transforms": [AugmentTransform(i)],
                 "result_props": {"augment_n": i},
-            },
+            }
         )
 
     return all_tests
