@@ -10,7 +10,7 @@ from sklearn.metrics import (
 )
 from sklearn.utils.class_weight import compute_class_weight
 from gzip_utils import *
-from config import get_all_tests
+from pdbbind_config import get_all_tests
 
 from molzip import ZipRegressor, ZipClassifier
 from molzip.featurizers import ZipFeaturizer
