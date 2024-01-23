@@ -1,25 +1,26 @@
-import gzip
-import multiprocessing
 from typing import Any, Iterable
-from functools import partial
+from rdkit.Chem import AllChem
+import multiprocessing
 import numpy as np
+from rdkit import Chem
+from functools import partial
+from rdkit import DataStructs
 
 
-def regress(
-    x1: str, X_train: Iterable[str], y_train: np.ndarray, k: int, compressor: Any = gzip
-) -> Iterable:
-    Cx1 = len(compressor.compress(x1.encode()))
-    distance_from_x1 = []
-    for x2 in X_train:
-        Cx2 = len(compressor.compress(x2.encode()))
-        x1x2 = " ".join([x1, x2])
-        x2x1 = " ".join([x2, x1])
-        Cx1x2 = len(compressor.compress(x1x2.encode()))
-        Cx2x1 = len(compressor.compress(x2x1.encode()))
-        ncd = (0.5 * (Cx1x2 + Cx2x1) - min(Cx1, Cx2)) / max(Cx1, Cx2)
-        distance_from_x1.append(ncd)
+def regress(x1: str, X_train: Iterable[str], y_train: np.ndarray, k: int) -> Iterable:
+    # Convert SMILES strings to RDKit molecules and compute ECFP fingerprints
+    mol_x1 = Chem.MolFromSmiles(x1)
+    fp_x1 = AllChem.GetMorganFingerprint(mol_x1, 2)  # Radius 2 ECFP
 
-    distance_from_x1 = np.array(distance_from_x1)
+    fps_train = [
+        AllChem.GetMorganFingerprint(Chem.MolFromSmiles(x), 2) for x in X_train
+    ]
+
+    # Calculate Jaccard distances
+    distance_from_x1 = [DataStructs.TanimotoSimilarity(fp_x1, fp) for fp in fps_train]
+    distance_from_x1 = 1 - np.array(distance_from_x1)  # Convert similarity to distance
+
+    # Proceed with the rest of the function as before
     sorted_idx = np.argsort(distance_from_x1)
     top_k_values = y_train[sorted_idx[:k]]
     top_k_dists = distance_from_x1[sorted_idx[:k]]
@@ -32,8 +33,8 @@ def regress(
     return task_preds
 
 
-class ZipRegressor(object):
-    def __init__(self) -> "ZipRegressor":
+class RDKitRegressor(object):
+    def __init__(self) -> "RDKitRegressor":
         pass
 
     def fit_predict(
@@ -42,7 +43,6 @@ class ZipRegressor(object):
         preds = []
 
         y_train = np.array(y_train)
-
         if len(y_train.shape) == 1:
             y_train = np.expand_dims(y_train, axis=1)
 
