@@ -18,10 +18,13 @@ def classify(
     distance_from_x1 = []
 
     for x2 in X_train:
+
         Cx2 = len(compressor.compress(x2.encode()))
         x1x2 = " ".join([x1, x2])
+        x2x1 = " ".join([x2, x1])
         Cx1x2 = len(compressor.compress(x1x2.encode()))
-        ncd = (Cx1x2 - min(Cx1, Cx2)) / max(Cx1, Cx2)
+        Cx2x1 = len(compressor.compress(x2x1.encode()))
+        ncd = (0.5 * (Cx1x2 + Cx2x1) - min(Cx1, Cx2)) / max(Cx1, Cx2)
         distance_from_x1.append(ncd)
 
     distance_from_x1 = np.array(distance_from_x1)
