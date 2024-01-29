@@ -10,17 +10,24 @@ from sklearn.metrics import (
 )
 from sklearn.utils.class_weight import compute_class_weight
 from gzip_utils import *
-from pdbbind_config import get_all_tests
+from config import get_all_tests
 
-from molzip import ZipRegressor, ZipClassifier
+from molzip import (
+    ZipRegressor,
+    ZipClassifier,
+    RDKitRegressor,
+    RDKitClassifier,
+    ZipClassifier_CV,
+    ZipRegressor_CV,
+)
 from molzip.featurizers import ZipFeaturizer
 
 
 def benchmark(configs: List[Dict[str, Any]]) -> None:
     results = []
 
-    regressor = ZipRegressor()
-    classifier = ZipClassifier()
+    regressor_CV, regressor = ZipRegressor_CV(), ZipRegressor()
+    classifier_CV, classifier = ZipClassifier_CV(), ZipClassifier()
 
     for config in configs:
         n_bins = config["bins"] if "bins" in config else 128
@@ -62,7 +69,9 @@ def benchmark(configs: List[Dict[str, Any]]) -> None:
                     for y_task in y_train.T:
                         class_weights.append(
                             compute_class_weight(
-                                "balanced", classes=sorted(list(set(y_task))), y=y_task
+                                "balanced",
+                                classes=np.array(sorted(list(set(y_task)))),
+                                y=y_task,
                             )
                         )
 
@@ -78,23 +87,24 @@ def benchmark(configs: List[Dict[str, Any]]) -> None:
                     if len(nan_inds_test) > 0:
                         y_test = np.delete(y_test, nan_inds_test).reshape(-1, 1)
 
-                    valid_preds = regressor.fit_predict(
-                        X_train, y_train, X_valid, config["k"]
+
+                    best_k_valid, valid_preds = classifier_CV.fit_predict(
+                        X_train, y_train, X_valid, class_weights
                     )
-                    test_preds = regressor.fit_predict(
-                        X_train, y_train, X_test, config["k"]
+
+
+                    test_preds = classifier.fit_predict(
+                        X_train, y_train, X_test,best_k_valid, class_weights
                     )
 
                 print(X_train, y_train, X_valid)
 
-                # Run classification
-                valid_preds = classifier.fit_predict(
-                    X_train, y_train, X_valid, config["k"], class_weights
+                best_k_valid, valid_preds = classifier_CV.fit_predict(
+                    X_train, y_train, X_valid, class_weights
                 )
                 test_preds = classifier.fit_predict(
-                    X_train, y_train, X_test, config["k"], class_weights
+                    X_train, y_train, X_test,best_k_valid, class_weights
                 )
-
                 # Compute metrics
                 try:
                     valid_auroc = roc_auc_score(y_valid, valid_preds, multi_class="ovr")
@@ -127,16 +137,20 @@ def benchmark(configs: List[Dict[str, Any]]) -> None:
                 run_results.append([valid_auroc, valid_f1, 0, test_auroc, test_f1, 0])
             else:
                 if config["task"] == "regression":
-                    valid_preds = regressor.fit_predict(
-                        X_train, y_train, X_valid, config["k"]
-                    )
+
+
+                    best_k_valid, valid_preds = regressor_CV.fit_predict(
+                        X_train, y_train, X_valid)
+                    
                     test_preds = regressor.fit_predict(
-                        X_train, y_train, X_test, config["k"]
-                    )
+                        X_train, y_train, X_test, best_k_valid)
+
+
+
                 elif config["task"] == "regression_vec":
                     X_train, nan_inds_train = zip_featurizer(X_train)
                     X_valid, nan_inds_valid = zip_featurizer(X_valid)
-                    X_test, nan_inds_test = zip_featurizer(X_test)
+                    X_test, nan_inds_test   = zip_featurizer(X_test)
                     # Some features are nan (because rdkit failed to compute partial charges for some molecules)
                     if len(nan_inds_train) > 0:
                         y_train = np.delete(y_train, nan_inds_train).reshape(-1, 1)
@@ -145,11 +159,12 @@ def benchmark(configs: List[Dict[str, Any]]) -> None:
                     if len(nan_inds_test) > 0:
                         y_test = np.delete(y_test, nan_inds_test).reshape(-1, 1)
 
-                    valid_preds = regressor.fit_predict(
-                        X_train, y_train, X_valid, config["k"]
+                    best_k_valid, valid_preds = regressor_CV.fit_predict(
+                        X_train, y_train, X_valid
                     )
+                    
                     test_preds = regressor.fit_predict(
-                        X_train, y_train, X_test, config["k"]
+                        X_train, y_train, X_test, best_k_valid
                     )
 
                 else:
@@ -168,6 +183,8 @@ def benchmark(configs: List[Dict[str, Any]]) -> None:
 
                 print(f"\n{config['dataset']} ({len(tasks)} tasks)")
                 print(config)
+                print("best k valid", best_k_valid)
+                config["best_k_valid"] = best_k_valid
                 print(
                     f"Valid R: {valid_r[0]}, Valid RMSE: {valid_rmse}, Valid MAE: {valid_mae}, Test R: {test_r[0]}, Test RMSE: {test_rmse}, Test MAE: {test_mae}"
                 )
@@ -190,6 +207,7 @@ def benchmark(configs: List[Dict[str, Any]]) -> None:
                     "test_auroc": f"{round(results_means[3], 3)} +/- {round(results_stds[3], 3)}",
                     "test_f1": f"{round(results_means[4], 3)} +/- {round(results_stds[4], 3)}",
                     "test_r": f"{round(results_means[5], 3)} +/- {round(results_stds[5], 3)}",
+                    "best_k_valid": best_k_valid,
                 },
             )
         )

@@ -4,7 +4,8 @@ from typing import Iterable, Optional, Any
 from collections import Counter
 from functools import partial
 import numpy as np
-
+from sklearn.model_selection import KFold
+from sklearn.metrics import accuracy_score
 
 def classify(
     x1: str,
@@ -18,7 +19,6 @@ def classify(
     distance_from_x1 = []
 
     for x2 in X_train:
-
         Cx2 = len(compressor.compress(x2.encode()))
         x1x2 = " ".join([x1, x2])
         x2x1 = " ".join([x2, x1])
@@ -84,4 +84,64 @@ class ZipClassifier(object):
                 X,
             )
 
+        return np.array(preds)
+
+
+class ZipClassifier_CV(object):
+    def __init__(self) -> "ZipClassifier":
+        pass
+
+    def fit_predict(
+        self,
+        X_train: Iterable[str],
+        y_train: Iterable,
+        X: Iterable[str],
+        class_weights: Optional[Iterable] = None,
+    ) -> np.ndarray:
+        y_train = np.array(y_train)
+        if len(y_train.shape) == 1:
+            y_train = np.expand_dims(y_train, axis=1)
+
+        # Determine the best k using 5-fold cross-validation
+        kf = KFold(n_splits=5)
+        k_values = range(1, 35)  # Range of k values to try
+        k_performance = {}
+
+        for k in k_values:
+            k_scores = []
+            for train_index, test_index in kf.split(X_train):
+                X_train_fold, X_val_fold = (
+                    np.array(X_train)[train_index],
+                    np.array(X_train)[test_index],
+                )
+                y_train_fold, y_val_fold = y_train[train_index], y_train[test_index]
+
+                # Train and predict with the current fold and k value
+                preds_fold = self._predict_with_k(
+                    X_train_fold, y_train_fold, X_val_fold, k, class_weights
+                )
+                fold_score = accuracy_score(y_val_fold, preds_fold)
+                k_scores.append(fold_score)
+
+            k_performance[k] = np.mean(k_scores)
+
+        # Select the k with the highest average score
+        best_k = max(k_performance, key=k_performance.get)
+
+        # Make predictions with the best k value
+        return best_k, self._predict_with_k(X_train, y_train, X, best_k, class_weights)
+
+    def _predict_with_k(self, X_train, y_train, X, k, class_weights):
+        cpu_count = multiprocessing.cpu_count()
+        with multiprocessing.Pool(cpu_count) as p:
+            preds = p.map(
+                partial(
+                    classify,
+                    X_train=X_train,
+                    y_train=y_train,
+                    k=k,
+                    class_weights=class_weights,
+                ),
+                X,
+            )
         return np.array(preds)
