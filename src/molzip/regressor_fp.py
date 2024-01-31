@@ -5,6 +5,7 @@ import numpy as np
 from rdkit import Chem
 from functools import partial
 from rdkit import DataStructs
+from sklearn.model_selection import KFold
 
 
 def regress(x1: str, X_train: Iterable[str], y_train: np.ndarray, k: int) -> Iterable:
@@ -60,3 +61,56 @@ class RDKitRegressor(object):
             )
 
         return np.array(preds)
+
+
+def custom_mse(y_true, y_pred):
+    # Custom MSE function that ignores NaN values, for some molecules rdkit fails (again)
+    nan_mask = ~np.isnan(y_true) & ~np.isnan(y_pred)
+    y_true_filtered, y_pred_filtered = y_true[nan_mask], y_pred[nan_mask]
+    return ((y_true_filtered - y_pred_filtered) ** 2).mean()
+
+
+class RDKitRegressor_CV(object):
+    def __init__(self) -> "RDKitRegressor_CV":
+        self.regressor = RDKitRegressor()
+
+    def fit_predict(
+        self, X_train: Iterable[str], y_train: Iterable, X: Iterable[str]
+    ) -> np.ndarray:
+        y_train = np.array(y_train)
+        if len(y_train.shape) == 1:
+            y_train = np.expand_dims(y_train, axis=1)
+
+        # Determine the best k using 5-fold cross-validation
+        kf = KFold(n_splits=5)
+        k_values = range(1, 35)  # Range of k values to try
+        k_performance = {}
+
+        for k in k_values:
+            k_scores = []
+            for train_index, test_index in kf.split(X_train):
+                X_train_fold, X_val_fold = (
+                    np.array(X_train)[train_index],
+                    np.array(X_train)[test_index],
+                )
+                y_train_fold, y_val_fold = y_train[train_index], y_train[test_index]
+
+                # Train and predict with the current fold and k value
+                preds_fold = self._predict_with_k(
+                    X_train_fold, y_train_fold, X_val_fold, k
+                )
+                fold_score = custom_mse(y_val_fold, preds_fold)
+                k_scores.append(fold_score)
+
+            k_performance[k] = np.mean(k_scores)
+
+        # Select the k with the lowest average score (MSE)
+        best_k = min(k_performance, key=k_performance.get)
+
+        # Train the final model on the entire training set with the best k
+        final_predictions = self._predict_with_k(X_train, y_train, X, best_k)
+        return best_k, final_predictions
+
+    def _predict_with_k(self, X_train, y_train, X, k):
+        # Modified to use a specific value of k for predictions
+        return self.regressor.fit_predict(X_train, y_train, X, k)
