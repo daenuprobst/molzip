@@ -1,4 +1,5 @@
 from molzip.transforms import DeepsmilesTransform, SelfiesTransform, AugmentTransform
+from molzip.compressors import BrotliCompressor, LZ4Compressor, SnappyCompressor
 
 
 def get_all_tests():
@@ -9,12 +10,12 @@ def get_all_tests():
             "dataset": "pdbbind",
             "splitter": "scaffold",
             "task": "regression",
-            "vector": True,
+            "vector": False,
             "bins": 256,
-            "k": 3,
+            "k": 5,
             "is_imbalanced": False,
             "properties": ["ligand_smiles", "pocket_seq"],
-            "transforms": [AugmentTransform(1)],
+            "transforms": [AugmentTransform(3)],
             "n": 5,
         }
     )

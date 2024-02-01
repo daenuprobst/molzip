@@ -9,6 +9,9 @@ dependencies = [
     "selfies>=2.1.1",
     "deepsmiles>=1.0.1",
     "scikit-learn>=1.3.1",
+    "typer>=0.9.0",
+    "biopython>=1.83",
+    "tqdm>=4.66.1",
 ]
 license = { file = "LICENSE" }
 keywords = [

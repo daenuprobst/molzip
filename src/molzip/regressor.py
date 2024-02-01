@@ -5,19 +5,24 @@ from functools import partial
 import numpy as np
 from sklearn.metrics import mean_squared_error
 from sklearn.model_selection import KFold
+from molzip.compressors import Compressor, GzipCompressor
 
 
 def regress(
-    x1: str, X_train: Iterable[str], y_train: np.ndarray, k: int, compressor: Any = gzip
+    x1: str,
+    X_train: Iterable[str],
+    y_train: np.ndarray,
+    k: int,
+    compressor: Compressor = GzipCompressor(),
 ) -> Iterable:
-    Cx1 = len(compressor.compress(x1.encode()))
+    Cx1 = len(compressor.compress(x1))
     distance_from_x1 = []
     for x2 in X_train:
-        Cx2 = len(compressor.compress(x2.encode()))
+        Cx2 = len(compressor.compress(x2))
         x1x2 = " ".join([x1, x2])
         x2x1 = " ".join([x2, x1])
-        Cx1x2 = len(compressor.compress(x1x2.encode()))
-        Cx2x1 = len(compressor.compress(x2x1.encode()))
+        Cx1x2 = len(compressor.compress(x1x2))
+        Cx2x1 = len(compressor.compress(x2x1))
         ncd = (0.5 * (Cx1x2 + Cx2x1) - min(Cx1, Cx2)) / max(Cx1, Cx2)
         distance_from_x1.append(ncd)
 
@@ -26,8 +31,14 @@ def regress(
     top_k_values = y_train[sorted_idx[:k]]
     top_k_dists = distance_from_x1[sorted_idx[:k]]
 
+    # print(top_k_values.shape, top_k_dists.shape)
+
+    n_props = top_k_values.shape[1]
+
     task_preds = []
-    for vals, dists in zip(np.array(top_k_values).T, np.array(top_k_dists).T):
+    for vals, dists in zip(
+        np.array(top_k_values).T, np.tile(np.array(top_k_dists), (1, n_props)).T
+    ):
         dists = 1 - dists
         task_preds.append(np.mean(vals * dists) / np.sum(dists))
 
@@ -39,7 +50,12 @@ class ZipRegressor(object):
         pass
 
     def fit_predict(
-        self, X_train: Iterable[str], y_train: Iterable, X: Iterable[str], k: int = 25
+        self,
+        X_train: Iterable[str],
+        y_train: Iterable,
+        X: Iterable[str],
+        k: int = 25,
+        compressor: Compressor = GzipCompressor(),
     ) -> np.ndarray:
         preds = []
 
@@ -57,6 +73,7 @@ class ZipRegressor(object):
                     X_train=X_train,
                     y_train=y_train,
                     k=k,
+                    compressor=compressor,
                 ),
                 X,
             )
@@ -65,7 +82,7 @@ class ZipRegressor(object):
 
 
 class ZipRegressor_CV(object):
-    def __init__(self) -> "ZipRegressor":
+    def __init__(self) -> "ZipRegressor_CV":
         pass
 
     def fit_predict(
@@ -73,6 +90,7 @@ class ZipRegressor_CV(object):
         X_train: Iterable[str],
         y_train: Iterable,
         X: Iterable[str],
+        compressor: Compressor = GzipCompressor(),
     ) -> np.ndarray:
         y_train = np.array(y_train)
         if len(y_train.shape) == 1:
@@ -94,7 +112,7 @@ class ZipRegressor_CV(object):
 
                 # Train and predict with the current fold and k value
                 preds_fold = self._predict_with_k(
-                    X_train_fold, y_train_fold, X_val_fold, k
+                    X_train_fold, y_train_fold, X_val_fold, k, compressor
                 )
                 fold_score = mean_squared_error(y_val_fold, preds_fold)
                 k_scores.append(fold_score)
@@ -107,7 +125,7 @@ class ZipRegressor_CV(object):
         # Make predictions with the best k value
         return best_k, self._predict_with_k(X_train, y_train, X, best_k)
 
-    def _predict_with_k(self, X_train, y_train, X, k):
+    def _predict_with_k(self, X_train, y_train, X, k, compressor):
         cpu_count = multiprocessing.cpu_count()
         with multiprocessing.Pool(cpu_count) as p:
             preds = p.map(
@@ -116,6 +134,7 @@ class ZipRegressor_CV(object):
                     X_train=X_train,
                     y_train=y_train,
                     k=k,
+                    compressor=compressor,
                 ),
                 X,
             )

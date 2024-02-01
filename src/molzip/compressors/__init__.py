@@ -1,0 +1,7 @@
+from molzip.compressors.compressor import Compressor
+from molzip.compressors.smizip_compressor import SmiZipCompressor
+from molzip.compressors.gzip_compressor import GzipCompressor
+from molzip.compressors.lzma_compressor import LZMACompressor
+from molzip.compressors.brotli_compressor import BrotliCompressor
+from molzip.compressors.snappy_compressor import SnappyCompressor
+from molzip.compressors.lz4_compressor import LZ4Compressor

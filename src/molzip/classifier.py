@@ -1,3 +1,4 @@
+from bz2 import compress
 import gzip
 import multiprocessing
 from typing import Iterable, Optional, Any
@@ -7,23 +8,26 @@ import numpy as np
 from sklearn.model_selection import KFold
 from sklearn.metrics import accuracy_score
 
+from molzip.compressors import Compressor, GzipCompressor
+
+
 def classify(
     x1: str,
     X_train: Iterable[str],
     y_train: np.ndarray,
     k: int,
     class_weights: Optional[Iterable] = None,
-    compressor: Any = gzip,
+    compressor: Compressor = GzipCompressor(),
 ) -> Iterable:
-    Cx1 = len(compressor.compress(x1.encode()))
+    Cx1 = len(compressor.compress(x1))
     distance_from_x1 = []
 
     for x2 in X_train:
-        Cx2 = len(compressor.compress(x2.encode()))
+        Cx2 = len(compressor.compress(x2))
         x1x2 = " ".join([x1, x2])
         x2x1 = " ".join([x2, x1])
-        Cx1x2 = len(compressor.compress(x1x2.encode()))
-        Cx2x1 = len(compressor.compress(x2x1.encode()))
+        Cx1x2 = len(compressor.compress(x1x2))
+        Cx2x1 = len(compressor.compress(x2x1))
         ncd = (0.5 * (Cx1x2 + Cx2x1) - min(Cx1, Cx2)) / max(Cx1, Cx2)
         distance_from_x1.append(ncd)
 
@@ -63,6 +67,7 @@ class ZipClassifier(object):
         X: Iterable[str],
         k: int = 5,
         class_weights: Optional[Iterable] = None,
+        compressor: Compressor = GzipCompressor(),
     ) -> np.ndarray:
         preds = []
         y_train = np.array(y_train)
@@ -80,6 +85,7 @@ class ZipClassifier(object):
                     y_train=y_train,
                     k=k,
                     class_weights=class_weights,
+                    compressor=compressor,
                 ),
                 X,
             )
@@ -97,6 +103,7 @@ class ZipClassifier_CV(object):
         y_train: Iterable,
         X: Iterable[str],
         class_weights: Optional[Iterable] = None,
+        compressor: Compressor = GzipCompressor(),
     ) -> np.ndarray:
         y_train = np.array(y_train)
         if len(y_train.shape) == 1:
@@ -118,7 +125,12 @@ class ZipClassifier_CV(object):
 
                 # Train and predict with the current fold and k value
                 preds_fold = self._predict_with_k(
-                    X_train_fold, y_train_fold, X_val_fold, k, class_weights
+                    X_train_fold,
+                    y_train_fold,
+                    X_val_fold,
+                    k,
+                    class_weights,
+                    compressor=compressor,
                 )
                 fold_score = accuracy_score(y_val_fold, preds_fold)
                 k_scores.append(fold_score)
@@ -131,7 +143,7 @@ class ZipClassifier_CV(object):
         # Make predictions with the best k value
         return best_k, self._predict_with_k(X_train, y_train, X, best_k, class_weights)
 
-    def _predict_with_k(self, X_train, y_train, X, k, class_weights):
+    def _predict_with_k(self, X_train, y_train, X, k, class_weights, compressor):
         cpu_count = multiprocessing.cpu_count()
         with multiprocessing.Pool(cpu_count) as p:
             preds = p.map(
@@ -141,6 +153,7 @@ class ZipClassifier_CV(object):
                     y_train=y_train,
                     k=k,
                     class_weights=class_weights,
+                    compressor=compressor,
                 ),
                 X,
             )

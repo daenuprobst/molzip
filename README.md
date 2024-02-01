@@ -27,6 +27,21 @@ pred = zr.fit_predict(["CNC", "COC", "CCC"], [1.0, 1.5, 2.0], query, k=2)
 pred_multitarget = zr.fit_predict(["CNC", "COC", "CCC"], [[1.0, 2.5], [1.5, 1.0], [2.0, 0.25]], query, k=2)
 ```
 
+## PDBBind Data
+
+1. Download data form <http://www.pdbbind.org.cn>
+2. Specifically, the refind set `PDBbind_v2016_refined.tar.gz`
+3. and the core set `CASF-2016.tar.gz`
+4. From the core set, only extract the required files (the folder `coreset`)
+5. Finally, also download the index file (`INDEX_refined_data.2016`from `PDBbind_2016_plain_text_index.tar.gz`)
+6. You can then use the script`preprocess_pdbbind.py` to prepare the data e.g.:
+
+```bash
+python scripts/preprocess_pdbbind.py data/pdbbind/refined/ data/pdbbind/core/ data/pdbbind/INDEX_structure.2020 data/pdbbind/pdbbind.csv
+```
+
+This script will remove samples found in the core set from the refined set and create a CSV file containing amino-acid sequences and SMILES.
+
 ## Abstract
 
 TBD
