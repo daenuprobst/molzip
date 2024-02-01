@@ -1,0 +1,10 @@
+dataset,task,splitter,valid_auroc,valid_f1,valid_r,test_auroc,test_f1,test_r,compressor
+bbbp,classification,scaffold,0.0,0.0,0.0,0.648,0.639,0.0,Gzip
+tox21,classification,scaffold,0.0,0.0,0.0,0.594,0.17,0.0,Gzip
+sider,classification,scaffold,0.0,0.0,0.0,0.579,0.66,0.0,Gzip
+clintox,classification,scaffold,0.0,0.0,0.0,0.921,0.945,0.0,Gzip
+lipo,regression,scaffold,0.0,0.0,0.0,1.035,0.829,0.422,Gzip
+esol,regression,scaffold,0.0,0.0,0.0,1.325,1.006,0.722,Gzip
+freesolv,regression,scaffold,0.0,0.0,0.0,3.754,2.864,0.442,Gzip
+hiv,classification,scaffold,0.0,0.0,0.0,0.688,0.886,0.0,Gzip
+qm8,regression,scaffold,0.0,0.0,0.0,0.045,0.028,0.904,Gzip

@@ -17,7 +17,7 @@ from gzip_utils import (
     local_molnet_loader,
     write_table,
 )
-from moleculenet_config_vec import get_all_tests
+from moleculenet_config_nok import get_all_tests
 
 from molzip import (
     ZipRegressor,
