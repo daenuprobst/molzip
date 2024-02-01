@@ -17,7 +17,11 @@ from gzip_utils import (
     local_molnet_loader,
     write_table,
 )
+<<<<<<< HEAD
 from pdbbind_config import get_all_tests
+=======
+from moleculenet_config_nok import get_all_tests
+>>>>>>> 3f9aa298918e3dade6957f84d896d8d457553344
 
 from molzip import (
     ZipRegressor,

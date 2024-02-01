@@ -141,7 +141,9 @@ class ZipClassifier_CV(object):
         best_k = max(k_performance, key=k_performance.get)
 
         # Make predictions with the best k value
-        return best_k, self._predict_with_k(X_train, y_train, X, best_k, class_weights)
+        return best_k, self._predict_with_k(
+            X_train, y_train, X, best_k, class_weights, compressor
+        )
 
     def _predict_with_k(self, X_train, y_train, X, k, class_weights, compressor):
         cpu_count = multiprocessing.cpu_count()

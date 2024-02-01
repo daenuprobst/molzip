@@ -123,7 +123,7 @@ class ZipRegressor_CV(object):
         best_k = min(k_performance, key=k_performance.get)
 
         # Make predictions with the best k value
-        return best_k, self._predict_with_k(X_train, y_train, X, best_k)
+        return best_k, self._predict_with_k(X_train, y_train, X, best_k, compressor)
 
     def _predict_with_k(self, X_train, y_train, X, k, compressor):
         cpu_count = multiprocessing.cpu_count()
