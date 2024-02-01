@@ -6,6 +6,9 @@ import multiprocessing
 import numpy as np
 from functools import partial
 from collections import Counter
+from sklearn.model_selection import KFold
+from sklearn.metrics import accuracy_score
+
 
 def classify(
     x1: str,
@@ -84,3 +87,49 @@ class RDKitClassifier(object):
             )
 
         return np.array(preds)
+
+
+class RDKitClassifier_CV(object):
+    def __init__(self) -> "RDKitClassifier_CV":
+        self.classifier = RDKitClassifier()
+
+    def fit_predict(
+        self, X_train: Iterable[str], y_train: Iterable, X: Iterable[str], class_weights
+    ) -> tuple:
+        y_train = np.array(y_train)
+        if len(y_train.shape) == 1:
+            y_train = np.expand_dims(y_train, axis=1)
+
+        # Determine the best k using 5-fold cross-validation
+        kf = KFold(n_splits=5)
+        k_values = range(1, 35)  # Range of k values to try
+        k_performance = {}
+
+        for k in k_values:
+            k_scores = []
+            for train_index, test_index in kf.split(X_train):
+                X_train_fold, X_val_fold = (
+                    np.array(X_train)[train_index],
+                    np.array(X_train)[test_index],
+                )
+                y_train_fold, y_val_fold = y_train[train_index], y_train[test_index]
+
+                # Train and predict with the current fold and k value
+                preds_fold = self._predict_with_k(
+                    X_train_fold, y_train_fold, X_val_fold, k, class_weights
+                )
+                fold_score = accuracy_score(y_val_fold, preds_fold)
+                k_scores.append(fold_score)
+
+            k_performance[k] = np.mean(k_scores)
+
+        # Select the k with the highest average accuracy
+        best_k = max(k_performance, key=k_performance.get)
+
+        # Train the final classifier on the entire training set with the best k
+        final_predictions = self._predict_with_k(X_train, y_train, X, best_k, class_weights)
+        return best_k, final_predictions
+
+    def _predict_with_k(self, X_train, y_train, X, k, class_weights):
+        # Modified to use a specific value of k for predictions
+        return self.classifier.fit_predict(X_train, y_train, X, k, class_weights)
