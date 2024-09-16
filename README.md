@@ -42,6 +42,10 @@ python scripts/preprocess_pdbbind.py data/pdbbind/refined/ data/pdbbind/core/ da
 
 This script will remove samples found in the core set from the refined set and create a CSV file containing amino-acid sequences and SMILES.
 
+## Reproducing results
+The configurations to reproduce the results can be found in the `*_config_*.py` files in the root directory and are loaded on line 20
+in `main.py`.
+
 ## Abstract
 
 TBD
@@ -105,14 +109,3 @@ The classifier is also able to classify raw reaction SMILES from the Schneider50
 |---------|------|------------------|--------------|-----------------|-------------|
 |schneider|random|0.0 +/- 0.0       |0.801 +/- 0.0 |0.0 +/- 0.0      |0.801 +/- 0.0|
 
-## Discussion
-
-TBD
-
-## References
-
-[^1] <https://arxiv.org/abs/2212.09410>
-
-# What is this?
-
-This is an experiment for a small open source manuscript/article that aims to validate and evaluate the performance of compression-based molecular classification using Gzip. If you want to join/help out, leave a message or a pull request that includes your name and, if available, your affiliation.
