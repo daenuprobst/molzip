@@ -1,3 +1,4 @@
 from molzip.transforms.deepsmiles_transform import DeepsmilesTransform
 from molzip.transforms.selfies_transform import SelfiesTransform
 from molzip.transforms.augment_transform import AugmentTransform
+from molzip.transforms.dummy_transform import DummyTransform

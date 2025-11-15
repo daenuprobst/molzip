@@ -12,11 +12,11 @@ def get_all_tests():
             "task": "regression",
             "vector": False,
             "bins": 256,
-            # "k": 5,
+            "k": 5,
             "is_imbalanced": False,
             "properties": ["ligand_smiles", "pocket_seq"],
-            # "transforms": [AugmentTransform(3)],
-            "n": 1,
+            "transforms": [AugmentTransform(10)],
+            "n": 5,
         }
     )
 

@@ -1,0 +1,190 @@
+dataset,task,splitter,valid_auroc,valid_f1,valid_r,test_auroc,test_f1,test_r,compressor,transform
+bbbp,classification,scaffold,0.0,0.0,0.0,0.648,0.639,0.0,Gzip,None
+tox21,classification,scaffold,0.0,0.0,0.0,0.594,0.17,0.0,Gzip,None
+sider,classification,scaffold,0.0,0.0,0.0,0.579,0.66,0.0,Gzip,None
+clintox,classification,scaffold,0.0,0.0,0.0,0.914,0.932,0.0,Gzip,None
+lipo,regression,scaffold,0.0,0.0,0.0,1.035,0.829,0.422,Gzip,None
+esol,regression,scaffold,0.0,0.0,0.0,1.325,1.006,0.722,Gzip,None
+freesolv,regression,scaffold,0.0,0.0,0.0,3.754,2.864,0.442,Gzip,None
+hiv,classification,scaffold,0.0,0.0,0.0,0.688,0.886,0.0,Gzip,None
+qm8,regression,scaffold,0.0,0.0,0.0,0.045,0.028,0.904,Gzip,None
+bbbp,classification,scaffold,0.0,0.0,0.0,0.691,0.68,0.0,LZ4,None
+tox21,classification,scaffold,0.0,0.0,0.0,0.587,0.179,0.0,LZ4,None
+sider,classification,scaffold,0.0,0.0,0.0,0.584,0.651,0.0,LZ4,None
+clintox,classification,scaffold,0.0,0.0,0.0,0.87,0.942,0.0,LZ4,None
+lipo,regression,scaffold,0.0,0.0,0.0,0.979,0.788,0.491,LZ4,None
+esol,regression,scaffold,0.0,0.0,0.0,1.46,1.016,0.654,LZ4,None
+freesolv,regression,scaffold,0.0,0.0,0.0,5.586,4.634,0.188,LZ4,None
+hiv,classification,scaffold,0.0,0.0,0.0,0.687,0.856,0.0,LZ4,None
+qm8,regression,scaffold,0.0,0.0,0.0,0.047,0.03,0.898,LZ4,None
+bbbp,classification,scaffold,0.0,0.0,0.0,0.641,0.629,0.0,Snappy,None
+tox21,classification,scaffold,0.0,0.0,0.0,0.575,0.164,0.0,Snappy,None
+sider,classification,scaffold,0.0,0.0,0.0,0.594,0.649,0.0,Snappy,None
+clintox,classification,scaffold,0.0,0.0,0.0,0.882,0.963,0.0,Snappy,None
+lipo,regression,scaffold,0.0,0.0,0.0,1.072,0.855,0.381,Snappy,None
+esol,regression,scaffold,0.0,0.0,0.0,1.736,1.318,0.599,Snappy,None
+freesolv,regression,scaffold,0.0,0.0,0.0,5.343,4.46,0.306,Snappy,None
+hiv,classification,scaffold,0.0,0.0,0.0,0.667,0.838,0.0,Snappy,None
+qm8,regression,scaffold,0.0,0.0,0.0,0.05,0.031,0.885,Snappy,None
+bbbp,classification,scaffold,0.0,0.0,0.0,0.638,0.629,0.0,Gzip,LZ4
+tox21,classification,scaffold,0.0,0.0,0.0,0.587,0.176,0.0,Gzip,LZ4
+sider,classification,scaffold,0.0,0.0,0.0,0.575,0.637,0.0,Gzip,LZ4
+clintox,classification,scaffold,0.0,0.0,0.0,0.92,0.942,0.0,Gzip,LZ4
+lipo,regression,scaffold,0.0,0.0,0.0,1.031,0.819,0.439,Gzip,LZ4
+esol,regression,scaffold,0.0,0.0,0.0,1.203,0.947,0.77,Gzip,LZ4
+freesolv,regression,scaffold,0.0,0.0,0.0,3.734,2.768,0.557,Gzip,LZ4
+hiv,classification,scaffold,0.0,0.0,0.0,0.699,0.893,0.0,Gzip,LZ4
+qm8,regression,scaffold,0.0,0.0,0.0,0.044,0.027,0.91,Gzip,LZ4
+bbbp,classification,scaffold,0.0,0.0,0.0,0.646,0.634,0.0,LZ4,LZ4
+tox21,classification,scaffold,0.0,0.0,0.0,0.589,0.176,0.0,LZ4,LZ4
+sider,classification,scaffold,0.0,0.0,0.0,0.586,0.651,0.0,LZ4,LZ4
+clintox,classification,scaffold,0.0,0.0,0.0,0.88,0.959,0.0,LZ4,LZ4
+lipo,regression,scaffold,0.0,0.0,0.0,1.052,0.836,0.421,LZ4,LZ4
+esol,regression,scaffold,0.0,0.0,0.0,1.781,1.327,0.496,LZ4,LZ4
+freesolv,regression,scaffold,0.0,0.0,0.0,5.969,4.931,0.191,LZ4,LZ4
+hiv,classification,scaffold,0.0,0.0,0.0,0.689,0.851,0.0,LZ4,LZ4
+qm8,regression,scaffold,0.0,0.0,0.0,0.046,0.029,0.9,LZ4,LZ4
+bbbp,classification,scaffold,0.0,0.0,0.0,0.607,0.598,0.0,Snappy,LZ4
+tox21,classification,scaffold,0.0,0.0,0.0,0.567,0.142,0.0,Snappy,LZ4
+sider,classification,scaffold,0.0,0.0,0.0,0.594,0.665,0.0,Snappy,LZ4
+clintox,classification,scaffold,0.0,0.0,0.0,0.901,0.907,0.0,Snappy,LZ4
+lipo,regression,scaffold,0.0,0.0,0.0,1.032,0.819,0.401,Snappy,LZ4
+esol,regression,scaffold,0.0,0.0,0.0,1.849,1.453,0.576,Snappy,LZ4
+freesolv,regression,scaffold,0.0,0.0,0.0,5.573,4.629,0.035,Snappy,LZ4
+hiv,classification,scaffold,0.0,0.0,0.0,0.682,0.881,0.0,Snappy,LZ4
+qm8,regression,scaffold,0.0,0.0,0.0,0.048,0.03,0.892,Snappy,LZ4
+bbbp,classification,scaffold,0.0,0.0,0.0,0.642,0.634,0.0,Gzip,Snappy
+tox21,classification,scaffold,0.0,0.0,0.0,0.577,0.155,0.0,Gzip,Snappy
+sider,classification,scaffold,0.0,0.0,0.0,0.584,0.652,0.0,Gzip,Snappy
+clintox,classification,scaffold,0.0,0.0,0.0,0.693,0.796,0.0,Gzip,Snappy
+lipo,regression,scaffold,0.0,0.0,0.0,1.027,0.826,0.439,Gzip,Snappy
+esol,regression,scaffold,0.0,0.0,0.0,1.265,0.951,0.739,Gzip,Snappy
+freesolv,regression,scaffold,0.0,0.0,0.0,3.139,2.389,0.638,Gzip,Snappy
+hiv,classification,scaffold,0.0,0.0,0.0,0.705,0.883,0.0,Gzip,Snappy
+qm8,regression,scaffold,0.0,0.0,0.0,0.046,0.029,0.899,Gzip,Snappy
+bbbp,classification,scaffold,0.0,0.0,0.0,0.584,0.577,0.0,LZ4,Snappy
+tox21,classification,scaffold,0.0,0.0,0.0,0.575,0.158,0.0,LZ4,Snappy
+sider,classification,scaffold,0.0,0.0,0.0,0.553,0.638,0.0,LZ4,Snappy
+clintox,classification,scaffold,0.0,0.0,0.0,0.672,0.846,0.0,LZ4,Snappy
+lipo,regression,scaffold,0.0,0.0,0.0,1.061,0.865,0.413,LZ4,Snappy
+esol,regression,scaffold,0.0,0.0,0.0,1.429,1.109,0.669,LZ4,Snappy
+freesolv,regression,scaffold,0.0,0.0,0.0,3.625,2.643,0.343,LZ4,Snappy
+hiv,classification,scaffold,0.0,0.0,0.0,0.708,0.873,0.0,LZ4,Snappy
+qm8,regression,scaffold,0.0,0.0,0.0,0.047,0.03,0.894,LZ4,Snappy
+bbbp,classification,scaffold,0.0,0.0,0.0,0.57,0.567,0.0,Snappy,Snappy
+tox21,classification,scaffold,0.0,0.0,0.0,0.558,0.151,0.0,Snappy,Snappy
+sider,classification,scaffold,0.0,0.0,0.0,0.585,0.662,0.0,Snappy,Snappy
+clintox,classification,scaffold,0.0,0.0,0.0,0.637,0.825,0.0,Snappy,Snappy
+lipo,regression,scaffold,0.0,0.0,0.0,1.092,0.853,0.382,Snappy,Snappy
+esol,regression,scaffold,0.0,0.0,0.0,1.514,1.157,0.611,Snappy,Snappy
+freesolv,regression,scaffold,0.0,0.0,0.0,3.961,3.115,0.271,Snappy,Snappy
+hiv,classification,scaffold,0.0,0.0,0.0,0.67,0.895,0.0,Snappy,Snappy
+qm8,regression,scaffold,0.0,0.0,0.0,0.047,0.03,0.895,Snappy,Snappy
+bbbp,classification,scaffold,0.0,0.0,0.0,0.634,0.624,0.0,Gzip,Aug 1
+tox21,classification,scaffold,0.0,0.0,0.0,0.568,0.172,0.0,Gzip,Aug 1
+sider,classification,scaffold,0.0,0.0,0.0,0.599,0.656,0.0,Gzip,Aug 1
+clintox,classification,scaffold,0.0,0.0,0.0,0.865,0.932,0.0,Gzip,Aug 1
+lipo,regression,scaffold,0.0,0.0,0.0,0.977,0.781,0.496,Gzip,Aug 1
+esol,regression,scaffold,0.0,0.0,0.0,1.101,0.823,0.812,Gzip,Aug 1
+freesolv,regression,scaffold,0.0,0.0,0.0,3.458,2.64,0.495,Gzip,Aug 1
+hiv,classification,scaffold,0.0,0.0,0.0,0.7,0.866,0.0,Gzip,Aug 1
+qm8,regression,scaffold,0.0,0.0,0.0,0.043,0.027,0.908,Gzip,Aug 1
+bbbp,classification,scaffold,0.0,0.0,0.0,0.659,0.649,0.0,LZ4,Aug 1
+tox21,classification,scaffold,0.0,0.0,0.0,0.589,0.154,0.0,LZ4,Aug 1
+sider,classification,scaffold,0.0,0.0,0.0,0.617,0.684,0.0,LZ4,Aug 1
+clintox,classification,scaffold,0.0,0.0,0.0,0.852,0.908,0.0,LZ4,Aug 1
+lipo,regression,scaffold,0.0,0.0,0.0,1.048,0.845,0.396,LZ4,Aug 1
+esol,regression,scaffold,0.0,0.0,0.0,1.151,0.923,0.799,LZ4,Aug 1
+freesolv,regression,scaffold,0.0,0.0,0.0,3.849,2.932,0.463,LZ4,Aug 1
+hiv,classification,scaffold,0.0,0.0,0.0,0.714,0.885,0.0,LZ4,Aug 1
+qm8,regression,scaffold,0.0,0.0,0.0,0.047,0.03,0.901,LZ4,Aug 1
+bbbp,classification,scaffold,0.0,0.0,0.0,0.638,0.629,0.0,Snappy,Aug 1
+tox21,classification,scaffold,0.0,0.0,0.0,0.571,0.167,0.0,Snappy,Aug 1
+sider,classification,scaffold,0.0,0.0,0.0,0.579,0.644,0.0,Snappy,Aug 1
+clintox,classification,scaffold,0.0,0.0,0.0,0.785,0.918,0.0,Snappy,Aug 1
+lipo,regression,scaffold,0.0,0.0,0.0,1.029,0.831,0.406,Snappy,Aug 1
+esol,regression,scaffold,0.0,0.0,0.0,1.074,0.888,0.838,Snappy,Aug 1
+freesolv,regression,scaffold,0.0,0.0,0.0,4.239,3.217,0.332,Snappy,Aug 1
+hiv,classification,scaffold,0.0,0.0,0.0,0.713,0.891,0.0,Snappy,Aug 1
+qm8,regression,scaffold,0.0,0.0,0.0,0.047,0.03,0.901,Snappy,Aug 1
+bbbp,classification,scaffold,0.0,0.0,0.0,0.664,0.655,0.0,Gzip,Aug 3
+tox21,classification,scaffold,0.0,0.0,0.0,0.593,0.182,0.0,Gzip,Aug 3
+sider,classification,scaffold,0.0,0.0,0.0,0.612,0.669,0.0,Gzip,Aug 3
+clintox,classification,scaffold,0.0,0.0,0.0,0.824,0.905,0.0,Gzip,Aug 3
+lipo,regression,scaffold,0.0,0.0,0.0,0.99,0.794,0.481,Gzip,Aug 3
+esol,regression,scaffold,0.0,0.0,0.0,1.092,0.81,0.821,Gzip,Aug 3
+freesolv,regression,scaffold,0.0,0.0,0.0,3.157,2.273,0.595,Gzip,Aug 3
+hiv,classification,scaffold,0.0,0.0,0.0,0.711,0.888,0.0,Gzip,Aug 3
+qm8,regression,scaffold,0.0,0.0,0.0,0.042,0.026,0.916,Gzip,Aug 3
+bbbp,classification,scaffold,0.0,0.0,0.0,0.656,0.649,0.0,LZ4,Aug 3
+tox21,classification,scaffold,0.0,0.0,0.0,0.57,0.166,0.0,LZ4,Aug 3
+sider,classification,scaffold,0.0,0.0,0.0,0.592,0.66,0.0,LZ4,Aug 3
+clintox,classification,scaffold,0.0,0.0,0.0,0.784,0.874,0.0,LZ4,Aug 3
+lipo,regression,scaffold,0.0,0.0,0.0,0.983,0.799,0.481,LZ4,Aug 3
+esol,regression,scaffold,0.0,0.0,0.0,1.02,0.824,0.855,LZ4,Aug 3
+freesolv,regression,scaffold,0.0,0.0,0.0,3.569,2.61,0.51,LZ4,Aug 3
+hiv,classification,scaffold,0.0,0.0,0.0,0.696,0.873,0.0,LZ4,Aug 3
+qm8,regression,scaffold,0.0,0.0,0.0,0.044,0.028,0.908,LZ4,Aug 3
+bbbp,classification,scaffold,0.0,0.0,0.0,0.65,0.639,0.0,Snappy,Aug 3
+tox21,classification,scaffold,0.0,0.0,0.0,0.584,0.166,0.0,Snappy,Aug 3
+sider,classification,scaffold,0.0,0.0,0.0,0.585,0.666,0.0,Snappy,Aug 3
+clintox,classification,scaffold,0.0,0.0,0.0,0.678,0.767,0.0,Snappy,Aug 3
+lipo,regression,scaffold,0.0,0.0,0.0,1.01,0.824,0.441,Snappy,Aug 3
+esol,regression,scaffold,0.0,0.0,0.0,1.095,0.842,0.824,Snappy,Aug 3
+freesolv,regression,scaffold,0.0,0.0,0.0,3.658,2.774,0.491,Snappy,Aug 3
+hiv,classification,scaffold,0.0,0.0,0.0,0.686,0.883,0.0,Snappy,Aug 3
+qm8,regression,scaffold,0.0,0.0,0.0,0.044,0.028,0.909,Snappy,Aug 3
+bbbp,classification,scaffold,0.0,0.0,0.0,0.652,0.644,0.0,Gzip,Aug 5
+tox21,classification,scaffold,0.0,0.0,0.0,0.568,0.153,0.0,Gzip,Aug 5
+sider,classification,scaffold,0.0,0.0,0.0,0.599,0.679,0.0,Gzip,Aug 5
+clintox,classification,scaffold,0.0,0.0,0.0,0.81,0.922,0.0,Gzip,Aug 5
+lipo,regression,scaffold,0.0,0.0,0.0,0.988,0.785,0.483,Gzip,Aug 5
+esol,regression,scaffold,0.0,0.0,0.0,1.013,0.776,0.846,Gzip,Aug 5
+freesolv,regression,scaffold,0.0,0.0,0.0,3.221,2.292,0.65,Gzip,Aug 5
+hiv,classification,scaffold,0.0,0.0,0.0,0.703,0.885,0.0,Gzip,Aug 5
+qm8,regression,scaffold,0.0,0.0,0.0,0.041,0.025,0.918,Gzip,Aug 5
+bbbp,classification,scaffold,0.0,0.0,0.0,0.639,0.634,0.0,LZ4,Aug 5
+tox21,classification,scaffold,0.0,0.0,0.0,0.57,0.14,0.0,LZ4,Aug 5
+sider,classification,scaffold,0.0,0.0,0.0,0.598,0.686,0.0,LZ4,Aug 5
+clintox,classification,scaffold,0.0,0.0,0.0,0.749,0.81,0.0,LZ4,Aug 5
+lipo,regression,scaffold,0.0,0.0,0.0,1.01,0.791,0.447,LZ4,Aug 5
+esol,regression,scaffold,0.0,0.0,0.0,1.068,0.858,0.83,LZ4,Aug 5
+freesolv,regression,scaffold,0.0,0.0,0.0,3.983,2.999,0.303,LZ4,Aug 5
+hiv,classification,scaffold,0.0,0.0,0.0,0.679,0.868,0.0,LZ4,Aug 5
+qm8,regression,scaffold,0.0,0.0,0.0,0.043,0.027,0.912,LZ4,Aug 5
+bbbp,classification,scaffold,0.0,0.0,0.0,0.631,0.624,0.0,Snappy,Aug 5
+tox21,classification,scaffold,0.0,0.0,0.0,0.602,0.169,0.0,Snappy,Aug 5
+sider,classification,scaffold,0.0,0.0,0.0,0.602,0.669,0.0,Snappy,Aug 5
+clintox,classification,scaffold,0.0,0.0,0.0,0.76,0.785,0.0,Snappy,Aug 5
+lipo,regression,scaffold,0.0,0.0,0.0,0.95,0.769,0.526,Snappy,Aug 5
+esol,regression,scaffold,0.0,0.0,0.0,1.181,0.902,0.787,Snappy,Aug 5
+freesolv,regression,scaffold,0.0,0.0,0.0,4.22,3.218,0.366,Snappy,Aug 5
+hiv,classification,scaffold,0.0,0.0,0.0,0.69,0.882,0.0,Snappy,Aug 5
+qm8,regression,scaffold,0.0,0.0,0.0,0.044,0.027,0.91,Snappy,Aug 5
+bbbp,classification,scaffold,0.0,0.0,0.0,0.682,0.675,0.0,Gzip,Aug 10
+tox21,classification,scaffold,0.0,0.0,0.0,0.595,0.177,0.0,Gzip,Aug 10
+sider,classification,scaffold,0.0,0.0,0.0,0.626,0.692,0.0,Gzip,Aug 10
+clintox,classification,scaffold,0.0,0.0,0.0,0.802,0.863,0.0,Gzip,Aug 10
+lipo,regression,scaffold,0.0,0.0,0.0,0.962,0.765,0.515,Gzip,Aug 10
+esol,regression,scaffold,0.0,0.0,0.0,0.937,0.729,0.87,Gzip,Aug 10
+freesolv,regression,scaffold,0.0,0.0,0.0,3.158,2.332,0.675,Gzip,Aug 10
+hiv,classification,scaffold,0.0,0.0,0.0,0.714,0.886,0.0,Gzip,Aug 10
+qm8,regression,scaffold,0.0,0.0,0.0,0.041,0.025,0.918,Gzip,Aug 10
+bbbp,classification,scaffold,0.0,0.0,0.0,0.649,0.644,0.0,LZ4,Aug 10
+tox21,classification,scaffold,0.0,0.0,0.0,0.583,0.16,0.0,LZ4,Aug 10
+sider,classification,scaffold,0.0,0.0,0.0,0.606,0.679,0.0,LZ4,Aug 10
+clintox,classification,scaffold,0.0,0.0,0.0,0.6,0.759,0.0,LZ4,Aug 10
+lipo,regression,scaffold,0.0,0.0,0.0,1.012,0.815,0.456,LZ4,Aug 10
+esol,regression,scaffold,0.0,0.0,0.0,1.157,0.926,0.797,LZ4,Aug 10
+freesolv,regression,scaffold,0.0,0.0,0.0,4.12,3.139,0.381,LZ4,Aug 10
+hiv,classification,scaffold,0.0,0.0,0.0,0.69,0.862,0.0,LZ4,Aug 10
+qm8,regression,scaffold,0.0,0.0,0.0,0.043,0.027,0.911,LZ4,Aug 10
+bbbp,classification,scaffold,0.0,0.0,0.0,0.693,0.691,0.0,Snappy,Aug 10
+tox21,classification,scaffold,0.0,0.0,0.0,0.583,0.167,0.0,Snappy,Aug 10
+sider,classification,scaffold,0.0,0.0,0.0,0.607,0.667,0.0,Snappy,Aug 10
+clintox,classification,scaffold,0.0,0.0,0.0,0.69,0.836,0.0,Snappy,Aug 10
+lipo,regression,scaffold,0.0,0.0,0.0,1.01,0.813,0.438,Snappy,Aug 10
+esol,regression,scaffold,0.0,0.0,0.0,1.253,0.953,0.754,Snappy,Aug 10
+freesolv,regression,scaffold,0.0,0.0,0.0,3.948,3.021,0.338,Snappy,Aug 10
+hiv,classification,scaffold,0.0,0.0,0.0,0.674,0.88,0.0,Snappy,Aug 10
+qm8,regression,scaffold,0.0,0.0,0.0,0.043,0.027,0.913,Snappy,Aug 10

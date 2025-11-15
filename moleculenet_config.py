@@ -27,7 +27,7 @@ def get_all_tests():
                 "k": 5,
                 "is_imbalanced": True,
                 "n": 5,
-                "transforms": [AugmentTransform(3)],
+                "transforms": [AugmentTransform(10)],
                 "compressor": compressor,
                 "result_props": {"compressor": name},
             }
@@ -41,7 +41,7 @@ def get_all_tests():
                 "k": 5,
                 "is_imbalanced": True,
                 "n": 5,
-                "transforms": [AugmentTransform(3)],
+                "transforms": [AugmentTransform(10)],
                 "compressor": compressor,
                 "result_props": {"compressor": name},
             }
@@ -55,7 +55,7 @@ def get_all_tests():
                 "k": 5,
                 "is_imbalanced": True,
                 "n": 5,
-                "transforms": [AugmentTransform(3)],
+                "transforms": [AugmentTransform(10)],
                 "compressor": compressor,
                 "result_props": {"compressor": name},
             }
@@ -69,7 +69,7 @@ def get_all_tests():
                 "k": 5,
                 "is_imbalanced": True,
                 "n": 5,
-                "transforms": [AugmentTransform(3)],
+                "transforms": [AugmentTransform(10)],
                 "compressor": compressor,
                 "result_props": {"compressor": name},
             }
@@ -83,7 +83,7 @@ def get_all_tests():
                 "k": 5,
                 "is_imbalanced": False,
                 "n": 5,
-                "transforms": [AugmentTransform(3)],
+                "transforms": [AugmentTransform(10)],
                 "compressor": compressor,
                 "result_props": {"compressor": name},
             }
@@ -97,7 +97,7 @@ def get_all_tests():
                 "k": 5,
                 "is_imbalanced": False,
                 "n": 5,
-                "transforms": [AugmentTransform(3)],
+                "transforms": [AugmentTransform(10)],
                 "compressor": compressor,
                 "result_props": {"compressor": name},
             }
@@ -111,7 +111,7 @@ def get_all_tests():
                 "k": 5,
                 "is_imbalanced": False,
                 "n": 5,
-                "transforms": [AugmentTransform(3)],
+                "transforms": [AugmentTransform(10)],
                 "compressor": compressor,
                 "result_props": {"compressor": name},
             }
@@ -125,7 +125,7 @@ def get_all_tests():
                 "k": 5,
                 "is_imbalanced": True,
                 "n": 5,
-                "transforms": [AugmentTransform(3)],
+                "transforms": [AugmentTransform(10)],
                 "compressor": compressor,
                 "result_props": {"compressor": name},
             }
@@ -139,7 +139,7 @@ def get_all_tests():
                 "k": 5,
                 "is_imbalanced": False,
                 "n": 5,
-                "transforms": [AugmentTransform(3)],
+                "transforms": [AugmentTransform(10)],
                 "compressor": compressor,
                 "result_props": {"compressor": name},
             }

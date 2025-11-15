@@ -1,6 +1,5 @@
-import gzip
 import multiprocessing
-from typing import Any, Iterable
+from typing import Iterable
 from functools import partial
 import numpy as np
 from sklearn.metrics import mean_squared_error
